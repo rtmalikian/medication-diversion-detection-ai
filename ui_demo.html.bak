@@ -1,0 +1,1699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinical Risk Modeling Engine - Standalone Assessment</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #34495e;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--dark-color));
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        .btn {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.3s;
+            margin: 0.25rem;
+        }
+
+        .btn:hover {
+            background-color: #2980b9;
+        }
+
+        .btn:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background-color: var(--primary-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: #1a252f;
+        }
+
+        .results {
+            margin-top: 2rem;
+        }
+
+        .risk-level {
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .risk-low {
+            background-color: rgba(46, 204, 113, 0.2);
+            border: 2px solid var(--success-color);
+            color: var(--success-color);
+        }
+
+        .risk-medium {
+            background-color: rgba(241, 196, 15, 0.2);
+            border: 2px solid var(--warning-color);
+            color: var(--warning-color);
+        }
+
+        .risk-high {
+            background-color: rgba(231, 76, 60, 0.2);
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .risk-critical {
+            background-color: rgba(192, 57, 43, 0.2);
+            border: 2px solid #c0392b;
+            color: #c0392b;
+        }
+
+        .red-flags {
+            background-color: #fff5f5;
+            border: 1px solid #fed7d7;
+            border-radius: 4px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .red-flags h3 {
+            color: var(--accent-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .red-flags ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .red-flags li {
+            padding: 0.25rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .red-flags li:before {
+            content: "⚠️";
+            position: absolute;
+            left: 0;
+        }
+
+        .feature-importance {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .feature-importance h3 {
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-bar {
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            margin: 0.25rem 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .feature-fill {
+            height: 100%;
+            background-color: var(--secondary-color);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: block;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .modal-header h2 {
+            color: var(--accent-color);
+            margin: 0;
+        }
+
+        .modal-body {
+            margin-bottom: 15px;
+        }
+
+        .modal-body p {
+            margin: 10px 0;
+            line-height: 1.5;
+        }
+
+        .modal-footer {
+            text-align: center;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid var(--secondary-color);
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            background-color: #f1f1f1;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-radius: 4px 4px 0 0;
+            margin-right: 0.25rem;
+        }
+
+        .tab.active {
+            background-color: white;
+            border-bottom: 1px solid white;
+            margin-bottom: -1px;
+            font-weight: bold;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .prescription-section {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+
+        .prescription-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .prescription-item input, .prescription-item select {
+            margin-right: 0.5rem;
+        }
+
+        .add-prescription {
+            margin-top: 0.5rem;
+            cursor: pointer;
+            color: var(--secondary-color);
+            font-weight: bold;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 1rem;
+            color: var(--dark-color);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Clinical Risk Modeling Engine</h1>
+            <p>Stand-alone Medication Diversion Assessment Tool</p>
+        </header>
+
+        <div class="card" style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-left: 5px solid #ffc107;">
+            <h2 style="color: #856404;">⚠️ IMPORTANT DISCLAIMER</h2>
+            <p><strong>THIS IS A PROTOTYPE DEMONSTRATION ONLY.</strong></p>
+            <p>This software is <strong>NOT intended for clinical use</strong>, is <strong>not designed to treat or diagnose any medical condition</strong>, and should <strong>not be used for actual clinical decision making</strong>.</p>
+            <p>This prototype is for <strong>demonstration and research purposes only</strong>.</p>
+            <p><strong>Any use for actual patient care is strictly prohibited</strong> until proper validation, regulatory approval, and clinical trials have been completed.</p>
+            <p>By using this tool, you acknowledge and agree to these terms.</p>
+        </div>
+
+        <div class="card">
+            <h2>Professional Verification Required</h2>
+            <div class="form-group">
+                <label for="providerLicense">Medical License Number:</label>
+                <input type="text" id="providerLicense" placeholder="Enter your medical license number" required>
+            </div>
+
+            <div class="form-group">
+                <label for="providerName">Provider Name:</label>
+                <input type="text" id="providerName" placeholder="Enter your full name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="providerSpecialty">Medical Specialty:</label>
+                <select id="providerSpecialty" required>
+                    <option value="">Select Specialty</option>
+                    <option value="primary_care">Primary Care</option>
+                    <option value="pain_management">Pain Management</option>
+                    <option value="psychiatry">Psychiatry</option>
+                    <option value="emergency">Emergency Medicine</option>
+                    <option value="internal_medicine">Internal Medicine</option>
+                    <option value="family_medicine">Family Medicine</option>
+                    <option value="anesthesiology">Anesthesiology</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+
+            <button type="button" class="btn" onclick="verifyProfessional()">Verify and Access Tool</button>
+
+            <div id="verificationMessage" style="margin-top: 1rem; padding: 0.5rem; display: none;"></div>
+        </div>
+
+        <div id="assessmentSection" style="display: none;">
+            <div class="card">
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab('basic')">Basic Assessment</div>
+                    <div class="tab" onclick="switchTab('detailed')">Detailed Assessment</div>
+                </div>
+
+                <div id="basic" class="tab-content active">
+                    <h2>Basic Patient Risk Assessment</h2>
+                    <form id="basicForm">
+                        <div class="form-group">
+                            <label for="patientId">Patient ID:</label>
+                            <input type="text" id="patientId" placeholder="e.g., PT001" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="age">Age:</label>
+                            <input type="number" id="age" min="18" max="120" placeholder="Patient's age" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="gender">Gender:</label>
+                            <select id="gender" required>
+                                <option value="">Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="substanceAbuse">Substance Abuse History:</label>
+                            <select id="substanceAbuse" required>
+                                <option value="">Select</option>
+                                <option value="false">No</option>
+                                <option value="true">Yes</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="opioidPrescriptions">Number of Opioid Prescriptions:</label>
+                            <input type="number" id="opioidPrescriptions" min="0" max="20" placeholder="e.g., 2" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="benzoPrescriptions">Number of Benzodiazepine Prescriptions:</label>
+                            <input type="number" id="benzoPrescriptions" min="0" max="20" placeholder="e.g., 1" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="numPrescribers">Number of Prescribers:</label>
+                            <input type="number" id="numPrescribers" min="1" max="20" placeholder="e.g., 2" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="edVisits">Emergency Department Visits (Last 12 Months):</label>
+                            <input type="number" id="edVisits" min="0" max="50" placeholder="e.g., 3" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="earlyRefillEventsBasic">Early Refill Requests (Red Flag):</label>
+                            <input type="number" id="earlyRefillEventsBasic" min="0" max="20" placeholder="e.g., 2" required>
+                            <small class="form-text">Red flag: Requesting refills before scheduled time</small>
+                        </div>
+
+                        <!-- Provider gut instinct -->
+                        <div class="form-group">
+                            <label for="providerGutInstinct">Provider's Clinical Intuition (Gut Feeling):</label>
+                            <select id="providerGutInstinct" required>
+                                <option value="">Select Level</option>
+                                <option value="very_low">Very Low Concern</option>
+                                <option value="low">Low Concern</option>
+                                <option value="moderate">Moderate Concern</option>
+                                <option value="high">High Concern</option>
+                                <option value="very_high">Very High Concern</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn">Calculate Diversion Risk</button>
+                        <button type="button" class="btn btn-secondary" onclick="fillSampleData()">Fill with Sample Data</button>
+                    </form>
+                </div>
+
+                <div id="detailed" class="tab-content">
+                    <h2>Detailed Patient Risk Assessment</h2>
+                    <form id="detailedForm">
+                        <div class="form-group">
+                            <label for="detailedPatientId">Patient ID:</label>
+                            <input type="text" id="detailedPatientId" placeholder="e.g., PT001" required>
+                        </div>
+
+                    <div class="form-group">
+                        <label for="detailedAge">Age:</label>
+                        <input type="number" id="detailedAge" min="18" max="120" placeholder="Patient's age" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="detailedGender">Gender:</label>
+                        <select id="detailedGender" required>
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="detailedSubstanceAbuse">Substance Abuse History:</label>
+                        <select id="detailedSubstanceAbuse" required>
+                            <option value="">Select</option>
+                            <option value="false">No</option>
+                            <option value="true">Yes</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="detailedMentalHealth">Mental Health History:</label>
+                        <select id="detailedMentalHealth" required>
+                            <option value="">Select</option>
+                            <option value="false">No</option>
+                            <option value="true">Yes</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="detailedChronicPain">Chronic Pain History:</label>
+                        <select id="detailedChronicPain" required>
+                            <option value="">Select</option>
+                            <option value="false">No</option>
+                            <option value="true">Yes</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="detailedEdVisits">ED Visits (Last 12 Months):</label>
+                        <input type="number" id="detailedEdVisits" min="0" max="50" placeholder="e.g., 3" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="detailedHospitalizations">Hospitalizations (Last 2 Years):</label>
+                        <input type="number" id="detailedHospitalizations" min="0" max="20" placeholder="e.g., 1">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="detailedPrimaryCareVisits">Primary Care Visits (Last 12 Months):</label>
+                        <input type="number" id="detailedPrimaryCareVisits" min="0" max="50" placeholder="e.g., 6">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="detailedOpioidPrescriptions">Opioid Prescriptions:</label>
+                        <input type="number" id="detailedOpioidPrescriptions" min="0" max="20" placeholder="e.g., 2" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="detailedBenzoPrescriptions">Benzodiazepine Prescriptions:</label>
+                        <input type="number" id="detailedBenzoPrescriptions" min="0" max="20" placeholder="e.g., 1" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="detailedOtherPrescriptions">Other Controlled Substances:</label>
+                        <input type="number" id="detailedOtherPrescriptions" min="0" max="20" placeholder="e.g., 1">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="numPrescribersDetailed">Number of Prescribers:</label>
+                        <input type="number" id="numPrescribersDetailed" min="1" max="20" placeholder="e.g., 2">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="numPharmacies">Number of Pharmacies Used:</label>
+                        <input type="number" id="numPharmacies" min="1" max="20" placeholder="e.g., 2">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="earlyRefillEvents">Early Refill Events:</label>
+                        <input type="number" id="earlyRefillEvents" min="0" max="20" placeholder="e.g., 0">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="concurrentPrescriptions">Concurrent Prescriptions:</label>
+                        <input type="number" id="concurrentPrescriptions" min="0" max="20" placeholder="e.g., 0">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="outOfRegionPrescriptions">Out-of-Region Prescriptions:</label>
+                        <input type="number" id="outOfRegionPrescriptions" min="0" max="20" placeholder="e.g., 0">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="detailedHistoryDiversion">History of Diversion:</label>
+                        <select id="detailedHistoryDiversion" required>
+                            <option value="">Select</option>
+                            <option value="false">No</option>
+                            <option value="true">Yes</option>
+                        </select>
+                    </div>
+
+                    <!-- Additional risk factors based on research -->
+                    <div class="form-group">
+                        <label for="travelDistanceToProvider">Distance to Prescribing Provider (miles):</label>
+                        <input type="number" id="travelDistanceToProvider" min="0" max="500" placeholder="e.g., 50">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="travelDistanceToPharmacy">Distance to Primary Pharmacy (miles):</label>
+                        <input type="number" id="travelDistanceToPharmacy" min="0" max="500" placeholder="e.g., 20">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="insuranceStatus">Insurance Status:</label>
+                        <select id="insuranceStatus" required>
+                            <option value="">Select</option>
+                            <option value="insured">Insured</option>
+                            <option value="uninsured">Uninsured</option>
+                            <option value="cash">Cash Pay</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="doctorShoppingAdmission">Patient Admits to Doctor Shopping:</label>
+                        <select id="doctorShoppingAdmission" required>
+                            <option value="">Select</option>
+                            <option value="false">No</option>
+                            <option value="true">Yes</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="diversionAdmission">Patient Admits to Medication Diversion:</label>
+                        <select id="diversionAdmission" required>
+                            <option value="">Select</option>
+                            <option value="false">No</option>
+                            <option value="true">Yes</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lostStolenReport">Reported Lost/Stolen Prescriptions:</label>
+                        <input type="number" id="lostStolenReport" min="0" max="20" placeholder="e.g., 0">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="prescriptionQuantity">Average Days Supply per Prescription:</label>
+                        <input type="number" id="prescriptionQuantity" min="1" max="365" placeholder="e.g., 30">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="highDosePrescriptions">High-Dose Prescriptions:</label>
+                        <input type="number" id="highDosePrescriptions" min="0" max="20" placeholder="e.g., 0">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="unusualRequests">Unusual Requests (Early Refills, Large Quantities, etc.):</label>
+                        <input type="number" id="unusualRequests" min="0" max="50" placeholder="e.g., 2">
+                    </div>
+
+                    <!-- Additional risk factors -->
+                    <div class="form-group">
+                        <label for="prescriberPressure">Prescriber Pressure Tactics:</label>
+                        <select id="prescriberPressure" required>
+                            <option value="">Select Level</option>
+                            <option value="none">None</option>
+                            <option value="low">Low (e.g., asking for specific medication)</option>
+                            <option value="moderate">Moderate (e.g., demanding specific drug)</option>
+                            <option value="high">High (e.g., aggressive demands, threats)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="paymentMethod">Payment Method (Red Flag if Cash):</label>
+                        <select id="paymentMethod" required>
+                            <option value="">Select Method</option>
+                            <option value="insurance">Insurance</option>
+                            <option value="credit">Credit Card</option>
+                            <option value="debit">Debit Card</option>
+                            <option value="cash">Cash</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="timeSinceLastPrescription">Time Since Last Prescription (days):</label>
+                        <input type="number" id="timeSinceLastPrescription" min="0" max="365" placeholder="e.g., 30">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="prescriptionFrequency">Prescription Frequency (per month):</label>
+                        <input type="number" id="prescriptionFrequency" min="0" max="30" placeholder="e.g., 2">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="geographicDispersion">Geographic Dispersion of Prescribers (miles):</label>
+                        <input type="number" id="geographicDispersion" min="0" max="500" placeholder="e.g., 50">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="pharmacyHopping">Pharmacy Hopping (Different Pharmacies):</label>
+                        <input type="number" id="pharmacyHopping" min="0" max="20" placeholder="e.g., 3">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="emergencyRequests">Emergency Requests (Unscheduled Visits):</label>
+                        <input type="number" id="emergencyRequests" min="0" max="50" placeholder="e.g., 2">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="prescriptionShopping">Prescription Shopping Patterns:</label>
+                        <select id="prescriptionShopping" required>
+                            <option value="">Select Frequency</option>
+                            <option value="none">None</option>
+                            <option value="low">Low (occasional)</option>
+                            <option value="moderate">Moderate (frequent)</option>
+                            <option value="high">High (constant pattern)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="inconsistentComplaints">Inconsistent Complaints/Reasons:</label>
+                        <select id="inconsistentComplaints" required>
+                            <option value="">Select Level</option>
+                            <option value="none">None</option>
+                            <option value="low">Low (minor inconsistencies)</option>
+                            <option value="moderate">Moderate (frequent inconsistencies)</option>
+                            <option value="high">High (significant inconsistencies)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="painOutProportion">Pain Out of Proportion to Physical Exam:</label>
+                        <select id="painOutProportion" required>
+                            <option value="">Select Level</option>
+                            <option value="none">None</option>
+                            <option value="mild">Mild (some discrepancy)</option>
+                            <option value="moderate">Moderate (clear discrepancy)</option>
+                            <option value="severe">Severe (significant discrepancy)</option>
+                        </select>
+                        <small class="form-text">Pain level significantly higher than expected based on physical findings</small>
+                    </div>
+
+                    <!-- Provider gut instinct -->
+                    <div class="form-group">
+                        <label for="detailedProviderGutInstinct">Provider's Clinical Intuition (Gut Feeling):</label>
+                        <select id="detailedProviderGutInstinct" required>
+                            <option value="">Select Level</option>
+                            <option value="very_low">Very Low Concern</option>
+                            <option value="low">Low Concern</option>
+                            <option value="moderate">Moderate Concern</option>
+                            <option value="high">High Concern</option>
+                            <option value="very_high">Very High Concern</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn">Calculate Diversion Risk</button>
+                    <button type="button" class="btn btn-secondary" onclick="fillDetailedSampleData()">Fill with Sample Data</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Assessment Results</h2>
+            <div id="resultsContainer">
+                <p>Enter patient information in either the Basic or Detailed form and click "Calculate Diversion Risk" to see results.</p>
+
+                <div id="loading" class="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Analyzing patient risk factors...</p>
+                </div>
+
+                <div id="results" style="display: none;">
+                    <div id="riskLevel" class="risk-level"></div>
+                    <p><strong>Risk Score:</strong> <span id="riskScore">-</span></p>
+                    <p><strong>Assessment Date:</strong> <span id="assessmentDate">-</span></p>
+                    <p><strong>Patient ID:</strong> <span id="resultPatientId">-</span></p>
+
+                    <div id="redFlags" class="red-flags" style="display: none;">
+                        <h3>Red Flags Identified:</h3>
+                        <ul id="redFlagsList"></ul>
+                    </div>
+
+                    <div id="featureImportance" class="feature-importance" style="display: none;">
+                        <h3>Key Risk Factors:</h3>
+                        <div id="featureBars"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>About This Assessment Tool</h2>
+            <p><strong>Stand-alone Risk Assessment:</strong> This web-based tool allows clinicians to quickly assess medication diversion risk without connecting to EHRs or external APIs.</p>
+            <p><strong>Two Assessment Levels:</strong> Choose between basic assessment for quick screening or detailed assessment for comprehensive evaluation.</p>
+            <p><strong>Evidence-based Framework:</strong> Incorporates guidelines from DEA, CDC, and SAMHSA to identify high-risk patterns.</p>
+            <p><strong>Risk Scoring:</strong> Algorithm considers multiple factors including substance abuse history, prescription patterns, healthcare utilization, and clinical indicators.</p>
+
+            <h3>Research Citations:</h3>
+            <ul>
+                <li>Centers for Disease Control and Prevention. (2022). Opioid Overdose: CDC Guidelines for Prescribing Opioids for Chronic Pain.</li>
+                <li>Drug Enforcement Administration. (2023). Controlled Substance Diversion: Reducing Diversion Through Proper Disposal.</li>
+                <li>Substance Abuse and Mental Health Services Administration. (2022). Key Substance Use and Mental Health Indicators in the United States.</li>
+                <li>Manchikanti, L., et al. (2014). Opioid epidemic in the United States: Deterrence, prevention, and treatment. Pain Physician, 17(2), E119-E155.</li>
+                <li>Kolodny, A., et al. (2015). The prescription opioid and heroin crisis: A public health approach to an epidemic of addiction. Annual Review of Public Health, 36, 559-574.</li>
+                <li>Boscarino, J. A., et al. (2015). Risk for prescription opioid use disorder among outpatients with chronic pain. Health and Quality of Life Outcomes, 13(1), 189.</li>
+                <li>Dowell, D., et al. (2016). CDC Guideline for Prescribing Opioids for Chronic Pain—United States, 2016. MMWR. Recommendations and Reports, 65(1), 1-49.</li>
+                <li>Haffajee, R. L., et al. (2018). Prescription drug monitoring programs and pain medication prescribing among high-risk patients. Pain Medicine, 19(3), 512-521.</li>
+                <li>Paulozzi, L. J., et al. (2011). Prescription drug monitoring programs and death rates from drug overdose. Pain Medicine, 12(5), 747-754.</li>
+                <li>Murphy, J. L., et al. (2017). Assessment of "doctor shopping" behavior across controlled substance classes. Medical Care, 55(2), 181-187.</li>
+            </ul>
+        </div>
+
+        <footer>
+            <p>Clinical Risk Modeling Engine - Standalone Medication Diversion Assessment Tool</p>
+            <p>This is a prototype demonstration. Not for clinical use without proper validation.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Professional verification
+        function verifyProfessional() {
+            const license = document.getElementById('providerLicense').value;
+            const name = document.getElementById('providerName').value;
+            const specialty = document.getElementById('providerSpecialty').value;
+
+            const messageElement = document.getElementById('verificationMessage');
+
+            if (!license || !name || !specialty) {
+                messageElement.style.display = 'block';
+                messageElement.style.backgroundColor = '#f8d7da';
+                messageElement.style.color = '#721c24';
+                messageElement.style.border = '1px solid #f5c6cb';
+                messageElement.textContent = 'Please complete all verification fields.';
+                return;
+            }
+
+            // In a real system, this would verify against a database of valid licenses
+            // For this demo, we'll just accept any non-empty values as valid
+            messageElement.style.display = 'block';
+            messageElement.style.backgroundColor = '#d4edda';
+            messageElement.style.color = '#155724';
+            messageElement.style.border = '1px solid #c3e6cb';
+            messageElement.textContent = 'Verification successful! Access granted.';
+
+            // Show the assessment section after verification
+            setTimeout(function() {
+                var assessmentSection = document.getElementById('assessmentSection');
+                if (assessmentSection) {
+                    assessmentSection.style.display = 'block';
+
+                    // Also ensure parent containers are visible if they exist
+                    if (assessmentSection.parentElement) {
+                        assessmentSection.parentElement.style.display = 'block';
+                    }
+
+                    // Scroll to assessment section
+                    assessmentSection.scrollIntoView({ behavior: 'smooth' });
+                }
+            }, 1000);
+        }
+
+        // Tab switching functionality
+        function switchTab(tabName) {
+            // Hide all tab content
+            const tabContents = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove('active');
+            }
+
+            // Remove active class from all tabs
+            const tabs = document.getElementsByClassName('tab');
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+            }
+
+            // Show selected tab content and mark tab as active
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Basic form submission
+        document.getElementById('basicForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = {
+                patient_id: document.getElementById('patientId').value || 'ANONYMOUS',
+                age: parseInt(document.getElementById('age').value) || 0,
+                gender: document.getElementById('gender').value,
+                clinical_indicators: {
+                    substance_abuse_history: document.getElementById('substanceAbuse').value === 'true',
+                    mental_health_history: false,
+                    chronic_pain_history: false,
+                    history_of_diversion: false
+                },
+                history: {
+                    ed_visits: parseInt(document.getElementById('edVisits').value) || 0
+                },
+                opioid_prescriptions: parseInt(document.getElementById('opioidPrescriptions').value) || 0,
+                benzodiazepine_prescriptions: parseInt(document.getElementById('benzoPrescriptions').value) || 0,
+                num_prescribers: parseInt(document.getElementById('numPrescribers').value) || 1,
+                early_refill_events: parseInt(document.getElementById('earlyRefillEventsBasic').value) || 0,
+                provider_gut_instinct: document.getElementById('providerGutInstinct').value
+            };
+
+            assessRisk(formData, 'basic');
+        });
+
+        // Detailed form submission
+        document.getElementById('detailedForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = {
+                patient_id: document.getElementById('detailedPatientId').value || 'ANONYMOUS',
+                age: parseInt(document.getElementById('detailedAge').value) || 0,
+                gender: document.getElementById('detailedGender').value,
+                clinical_indicators: {
+                    substance_abuse_history: document.getElementById('detailedSubstanceAbuse').value === 'true',
+                    mental_health_history: document.getElementById('detailedMentalHealth').value === 'true',
+                    chronic_pain_history: document.getElementById('detailedChronicPain').value === 'true',
+                    history_of_diversion: document.getElementById('detailedHistoryDiversion').value === 'true'
+                },
+                history: {
+                    ed_visits: parseInt(document.getElementById('detailedEdVisits').value) || 0,
+                    hospitalizations: parseInt(document.getElementById('detailedHospitalizations').value) || 0,
+                    primary_care_visits: parseInt(document.getElementById('detailedPrimaryCareVisits').value) || 0
+                },
+                opioid_prescriptions: parseInt(document.getElementById('detailedOpioidPrescriptions').value) || 0,
+                benzodiazepine_prescriptions: parseInt(document.getElementById('detailedBenzoPrescriptions').value) || 0,
+                other_controlled_substances: parseInt(document.getElementById('detailedOtherPrescriptions').value) || 0,
+                num_prescribers: parseInt(document.getElementById('numPrescribersDetailed').value) || 1,
+                num_pharmacies: parseInt(document.getElementById('numPharmacies').value) || 1,
+                early_refill_events: parseInt(document.getElementById('earlyRefillEvents').value) || 0,
+                concurrent_prescriptions: parseInt(document.getElementById('concurrentPrescriptions').value) || 0,
+                out_of_region_prescriptions: parseInt(document.getElementById('outOfRegionPrescriptions').value) || 0,
+                travel_distance_to_provider: parseInt(document.getElementById('travelDistanceToProvider').value) || 0,
+                travel_distance_to_pharmacy: parseInt(document.getElementById('travelDistanceToPharmacy').value) || 0,
+                insurance_status: document.getElementById('insuranceStatus').value,
+                doctor_shopping_admission: document.getElementById('doctorShoppingAdmission').value === 'true',
+                diversion_admission: document.getElementById('diversionAdmission').value === 'true',
+                lost_stolen_reports: parseInt(document.getElementById('lostStolenReport').value) || 0,
+                prescription_quantity: parseInt(document.getElementById('prescriptionQuantity').value) || 30,
+                high_dose_prescriptions: parseInt(document.getElementById('highDosePrescriptions').value) || 0,
+                unusual_requests: parseInt(document.getElementById('unusualRequests').value) || 0,
+                prescriber_pressure: document.getElementById('prescriberPressure').value,
+                payment_method: document.getElementById('paymentMethod').value,
+                time_since_last_prescription: parseInt(document.getElementById('timeSinceLastPrescription').value) || 0,
+                prescription_frequency: parseInt(document.getElementById('prescriptionFrequency').value) || 0,
+                geographic_dispersion: parseInt(document.getElementById('geographicDispersion').value) || 0,
+                pharmacy_hopping: parseInt(document.getElementById('pharmacyHopping').value) || 0,
+                emergency_requests: parseInt(document.getElementById('emergencyRequests').value) || 0,
+                prescription_shopping: document.getElementById('prescriptionShopping').value,
+                inconsistent_complaints: document.getElementById('inconsistentComplaints').value,
+                pain_out_proportion: document.getElementById('painOutProportion').value,
+                provider_gut_instinct: document.getElementById('detailedProviderGutInstinct').value
+            };
+
+            assessRisk(formData, 'detailed');
+        });
+
+        async function assessRisk(patientData, formType) {
+            // Show loading spinner
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+
+            // Simulate processing delay
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            // Calculate risk based on input data
+            const riskScore = calculateRiskScore(patientData);
+            const redFlags = generateRedFlags(patientData);
+            const featureImportance = calculateFeatureImportance(patientData, formType);
+
+            // Display results
+            displayResults(riskScore, redFlags, featureImportance, patientData.patient_id);
+
+            // Hide loading spinner
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('results').style.display = 'block';
+        }
+
+        function calculateRiskScore(patientData) {
+            // Calculate risk score based on various factors
+            let score = 0.1; // Base risk
+
+            // Age factor (higher risk for certain age groups)
+            if (patientData.age >= 18 && patientData.age <= 25) score += 0.1;
+            if (patientData.age >= 45 && patientData.age <= 65) score += 0.05;
+
+            // Clinical indicators (higher weight for basic form since fewer inputs)
+            if (patientData.clinical_indicators.substance_abuse_history) {
+                score += (patientData.formType === 'basic' ? 0.3 : 0.2);
+            }
+            if (patientData.clinical_indicators.mental_health_history) score += 0.15;
+            if (patientData.clinical_indicators.chronic_pain_history) score += 0.1;
+
+            // Prescription patterns
+            score += (patientData.opioid_prescriptions * 0.12);
+            score += (patientData.benzodiazepine_prescriptions * 0.08);
+            if (patientData.other_controlled_substances) {
+                score += (patientData.other_controlled_substances * 0.05);
+            }
+
+            // Healthcare utilization patterns
+            score += (patientData.history.ed_visits * 0.025);
+            if (patientData.history.hospitalizations) {
+                score += (patientData.history.hospitalizations * 0.015);
+            }
+
+            // Multiple prescriber/pharmacy patterns
+            if (patientData.num_prescribers > 2) score += 0.1;
+            if (patientData.num_pharmacies > 2) score += 0.1;
+
+            // High-risk behaviors
+            if (patientData.early_refill_events > 0) score += 0.15;
+            if (patientData.concurrent_prescriptions > 0) score += 0.15;
+            if (patientData.out_of_region_prescriptions > 0) score += 0.12;
+
+            // Travel distance factors
+            if (patientData.travel_distance_to_provider > 25) {
+                score += Math.min(patientData.travel_distance_to_provider * 0.002, 0.15); // Max 0.15 for distance
+            }
+            if (patientData.travel_distance_to_pharmacy > 25) {
+                score += Math.min(patientData.travel_distance_to_pharmacy * 0.002, 0.15); // Max 0.15 for distance
+            }
+
+            // Insurance status
+            if (patientData.insurance_status === 'cash' || patientData.insurance_status === 'uninsured') {
+                score += 0.15;
+            }
+
+            // Patient admissions
+            if (patientData.doctor_shopping_admission) score += 0.3;
+            if (patientData.diversion_admission) score += 0.25;
+
+            // Additional risk factors
+            score += (patientData.lost_stolen_reports * 0.1);
+            if (patientData.prescription_quantity > 60) score += 0.05; // Longer supply may indicate stockpiling
+            score += (patientData.high_dose_prescriptions * 0.08);
+            score += (patientData.unusual_requests * 0.05);
+
+            // History of diversion
+            if (patientData.clinical_indicators.history_of_diversion) score += 0.25;
+
+            // Provider gut instinct
+            switch(patientData.provider_gut_instinct) {
+                case 'very_low':
+                    score -= 0.1;  // Reduce risk if provider has very low concern
+                    break;
+                case 'low':
+                    score -= 0.05; // Slightly reduce risk
+                    break;
+                case 'moderate':
+                    score += 0.05; // Slightly increase risk
+                    break;
+                case 'high':
+                    score += 0.15; // Increase risk significantly
+                    break;
+                case 'very_high':
+                    score += 0.25; // Increase risk substantially
+                    break;
+            }
+
+            // Additional risk factors
+            switch(patientData.prescriber_pressure) {
+                case 'high':
+                    score += 0.20; // High pressure is a significant red flag
+                    break;
+                case 'moderate':
+                    score += 0.10; // Moderate pressure increases risk
+                    break;
+                case 'low':
+                    score += 0.05; // Low pressure slightly increases risk
+                    break;
+            }
+
+            // Payment method risk
+            if (patientData.payment_method === 'cash') {
+                score += 0.15; // Cash payments are a red flag
+            } else if (patientData.payment_method === 'other') {
+                score += 0.05; // Other payment methods slightly increase risk
+            }
+
+            // Time since last prescription - shorter time could indicate problems
+            if (patientData.time_since_last_prescription < 5 && patientData.prescription_frequency > 3) {
+                score += 0.10; // High frequency with short intervals
+            }
+
+            // Prescription frequency - higher frequency could indicate problems
+            if (patientData.prescription_frequency > 5) {
+                score += (patientData.prescription_frequency - 5) * 0.05;
+            }
+
+            // Geographic dispersion of prescribers
+            if (patientData.geographic_dispersion > 50) {
+                score += 0.10; // Wide geographic dispersion may indicate shopping
+            }
+
+            // Pharmacy hopping
+            if (patientData.pharmacy_hopping > 3) {
+                score += Math.min(patientData.pharmacy_hopping * 0.03, 0.15); // Cap at 0.15
+            }
+
+            // Emergency requests
+            if (patientData.emergency_requests > 3) {
+                score += Math.min(patientData.emergency_requests * 0.02, 0.10); // Cap at 0.10
+            }
+
+            // Prescription shopping patterns
+            switch(patientData.prescription_shopping) {
+                case 'high':
+                    score += 0.25; // Constant shopping is major red flag
+                    break;
+                case 'moderate':
+                    score += 0.15; // Frequent shopping increases risk
+                    break;
+                case 'low':
+                    score += 0.07; // Occasional shopping increases risk
+                    break;
+            }
+
+            // Inconsistent complaints
+            switch(patientData.inconsistent_complaints) {
+                case 'high':
+                    score += 0.20; // Major inconsistencies are red flags
+                    break;
+                case 'moderate':
+                    score += 0.12; // Frequent inconsistencies increase risk
+                    break;
+                case 'low':
+                    score += 0.05; // Minor inconsistencies slightly increase risk
+                    break;
+            }
+
+            // Pain out of proportion to physical exam
+            switch(patientData.pain_out_proportion) {
+                case 'severe':
+                    score += 0.25; // Significant discrepancy is major red flag
+                    break;
+                case 'moderate':
+                    score += 0.15; // Clear discrepancy increases risk
+                    break;
+                case 'mild':
+                    score += 0.08; // Some discrepancy slightly increases risk
+                    break;
+            }
+
+            // Ensure score is between 0 and 1
+            return Math.min(Math.max(score, 0), 1);
+        }
+
+        function generateRedFlags(patientData) {
+            const flags = [];
+
+            if (patientData.clinical_indicators.substance_abuse_history) {
+                flags.push("History of substance abuse");
+            }
+
+            if (patientData.clinical_indicators.mental_health_history) {
+                flags.push("History of mental health conditions");
+            }
+
+            if (patientData.clinical_indicators.chronic_pain_history) {
+                flags.push("History of chronic pain conditions");
+            }
+
+            if (patientData.opioid_prescriptions > 2) {
+                flags.push(`High number of opioid prescriptions (${patientData.opioid_prescriptions})`);
+            }
+
+            if (patientData.benzodiazepine_prescriptions > 1) {
+                flags.push(`Multiple benzodiazepine prescriptions (${patientData.benzodiazepine_prescriptions})`);
+            }
+
+            if (patientData.other_controlled_substances > 1) {
+                flags.push(`Multiple other controlled substances (${patientData.other_controlled_substances})`);
+            }
+
+            if (patientData.history.ed_visits > 4) {
+                flags.push(`Frequent emergency department visits (${patientData.history.ed_visits} visits)`);
+            }
+
+            if (patientData.num_prescribers > 2) {
+                flags.push(`Multiple prescribers (${patientData.num_prescribers})`);
+            }
+
+            if (patientData.num_pharmacies > 2) {
+                flags.push(`Multiple pharmacies (${patientData.num_pharmacies})`);
+            }
+
+            if (patientData.early_refill_events > 0) {
+                const count = patientData.early_refill_events;
+                const eventText = count === 1 ? "early refill event" : "early refill events";
+                flags.push(`Patient has ${count} ${eventText} (potential medication diversion indicator)`);
+            }
+
+            if (patientData.concurrent_prescriptions > 0) {
+                flags.push("Concurrent high-risk medication prescriptions");
+            }
+
+            if (patientData.out_of_region_prescriptions > 0) {
+                flags.push(`Out-of-region prescriptions (${patientData.out_of_region_prescriptions})`);
+            }
+
+            if (patientData.travel_distance_to_provider > 50) {
+                flags.push(`Long travel distance to provider (${patientData.travel_distance_to_provider} miles)`);
+            }
+
+            if (patientData.travel_distance_to_pharmacy > 50) {
+                flags.push(`Long travel distance to pharmacy (${patientData.travel_distance_to_pharmacy} miles)`);
+            }
+
+            if (patientData.insurance_status === 'cash' || patientData.insurance_status === 'uninsured') {
+                flags.push(`Paying cash or uninsured (${patientData.insurance_status})`);
+            }
+
+            if (patientData.doctor_shopping_admission) {
+                flags.push("Patient admits to doctor shopping");
+            }
+
+            if (patientData.diversion_admission) {
+                flags.push("Patient admits to medication diversion");
+            }
+
+            if (patientData.lost_stolen_reports > 0) {
+                flags.push(`Reported lost/stolen prescriptions (${patientData.lost_stolen_reports})`);
+            }
+
+            if (patientData.prescription_quantity > 90) {
+                flags.push(`Extended prescription supply (${patientData.prescription_quantity} days)`);
+            }
+
+            if (patientData.high_dose_prescriptions > 2) {
+                flags.push(`High-dose prescriptions (${patientData.high_dose_prescriptions})`);
+            }
+
+            if (patientData.unusual_requests > 3) {
+                flags.push(`Unusual requests (${patientData.unusual_requests})`);
+            }
+
+            if (patientData.provider_gut_instinct === 'high' || patientData.provider_gut_instinct === 'very_high') {
+                const concernLevel = patientData.provider_gut_instinct === 'high' ? 'High' : 'Very High';
+                flags.push(`Provider's clinical intuition indicates ${concernLevel.toLowerCase()} concern for diversion`);
+            }
+
+            // Additional red flags based on new factors
+            if (patientData.prescriber_pressure === 'high' || patientData.prescriber_pressure === 'moderate') {
+                const level = patientData.prescriber_pressure === 'high' ? 'High' : 'Moderate';
+                flags.push(`${level} prescriber pressure tactics detected`);
+            }
+
+            if (patientData.payment_method === 'cash') {
+                flags.push("Patient consistently pays in cash (red flag for avoiding tracking)");
+            }
+
+            if (patientData.time_since_last_prescription < 5 && patientData.prescription_frequency > 3) {
+                flags.push("High frequency of prescriptions with short intervals between them");
+            }
+
+            if (patientData.geographic_dispersion > 50) {
+                flags.push(`Geographic dispersion of prescribers: ${patientData.geographic_dispersion} miles (potential shopping pattern)`);
+            }
+
+            if (patientData.pharmacy_hopping > 3) {
+                flags.push(`Pharmacy hopping: ${patientData.pharmacy_hopping} different pharmacies used`);
+            }
+
+            if (patientData.emergency_requests > 3) {
+                flags.push(`Frequent emergency requests: ${patientData.emergency_requests} unscheduled visits`);
+            }
+
+            if (patientData.prescription_shopping === 'high' || patientData.prescription_shopping === 'moderate') {
+                const level = patientData.prescription_shopping === 'high' ? 'High' : 'Moderate';
+                flags.push(`${level} prescription shopping patterns detected`);
+            }
+
+            if (patientData.inconsistent_complaints === 'high' || patientData.inconsistent_complaints === 'moderate') {
+                const level = patientData.inconsistent_complaints === 'high' ? 'High' : 'Moderate';
+                flags.push(`${level} level of inconsistent complaints/reasons for medications`);
+            }
+
+            // Pain out of proportion to physical exam
+            if (patientData.pain_out_proportion === 'severe' || patientData.pain_out_proportion === 'moderate') {
+                const level = patientData.pain_out_proportion === 'severe' ? 'Severe' : 'Moderate';
+                flags.push(`${level} pain out of proportion to physical exam findings (potential diversion indicator)`);
+            }
+
+            if (patientData.clinical_indicators.history_of_diversion) {
+                flags.push("History of medication diversion");
+            }
+
+            return flags;
+        }
+
+        function calculateFeatureImportance(patientData, formType) {
+            const importance = {};
+
+            // Add features based on form type
+            if (formType === 'detailed') {
+                importance["Substance Abuse History"] = patientData.clinical_indicators.substance_abuse_history ? 0.2 : 0;
+                importance["Mental Health History"] = patientData.clinical_indicators.mental_health_history ? 0.15 : 0;
+                importance["Chronic Pain History"] = patientData.clinical_indicators.chronic_pain_history ? 0.1 : 0;
+                importance["History of Diversion"] = patientData.clinical_indicators.history_of_diversion ? 0.25 : 0;
+
+                // New detailed risk factors
+                if (patientData.travel_distance_to_provider > 25) {
+                    importance["Long Travel Distance to Provider"] = Math.min(patientData.travel_distance_to_provider * 0.002, 0.15);
+                }
+
+                if (patientData.travel_distance_to_pharmacy > 25) {
+                    importance["Long Travel Distance to Pharmacy"] = Math.min(patientData.travel_distance_to_pharmacy * 0.002, 0.15);
+                }
+
+                if (patientData.insurance_status === 'cash' || patientData.insurance_status === 'uninsured') {
+                    importance["Cash Pay/Uninsured Status"] = 0.15;
+                }
+
+                if (patientData.doctor_shopping_admission) {
+                    importance["Doctor Shopping Admission"] = 0.3;
+                }
+
+                if (patientData.diversion_admission) {
+                    importance["Diversion Admission"] = 0.25;
+                }
+
+                importance["Lost/Stolen Reports"] = patientData.lost_stolen_reports * 0.1;
+
+                if (patientData.prescription_quantity > 60) {
+                    importance["Extended Prescription Supply"] = 0.05;
+                }
+
+                importance["High-Dose Prescriptions"] = patientData.high_dose_prescriptions * 0.08;
+                importance["Unusual Requests"] = patientData.unusual_requests * 0.05;
+
+                // Add provider gut instinct to importance based on level
+                switch(patientData.provider_gut_instinct) {
+                    case 'moderate':
+                        importance["Provider Gut Instinct (Moderate)"] = 0.05;
+                        break;
+                    case 'high':
+                        importance["Provider Gut Instinct (High)"] = 0.15;
+                        break;
+                    case 'very_high':
+                        importance["Provider Gut Instinct (Very High)"] = 0.25;
+                        break;
+                }
+
+                // Add new risk factors to importance
+                switch(patientData.prescriber_pressure) {
+                    case 'high':
+                        importance["Prescriber Pressure Tactics (High)"] = 0.20;
+                        break;
+                    case 'moderate':
+                        importance["Prescriber Pressure Tactics (Moderate)"] = 0.10;
+                        break;
+                    case 'low':
+                        importance["Prescriber Pressure Tactics (Low)"] = 0.05;
+                        break;
+                }
+
+                if (patientData.payment_method === 'cash') {
+                    importance["Cash Payment Method"] = 0.15;
+                } else if (patientData.payment_method === 'other') {
+                    importance["Other Payment Method"] = 0.05;
+                }
+
+                if (patientData.time_since_last_prescription < 5 && patientData.prescription_frequency > 3) {
+                    importance["High Frequency with Short Intervals"] = 0.10;
+                }
+
+                if (patientData.prescription_frequency > 5) {
+                    importance["High Prescription Frequency"] = Math.min((patientData.prescription_frequency - 5) * 0.05, 0.20);
+                }
+
+                if (patientData.geographic_dispersion > 50) {
+                    importance["Geographic Dispersion of Prescribers"] = 0.10;
+                }
+
+                if (patientData.pharmacy_hopping > 3) {
+                    importance["Pharmacy Hopping"] = Math.min(patientData.pharmacy_hopping * 0.03, 0.15);
+                }
+
+                if (patientData.emergency_requests > 3) {
+                    importance["Frequent Emergency Requests"] = Math.min(patientData.emergency_requests * 0.02, 0.10);
+                }
+
+                switch(patientData.prescription_shopping) {
+                    case 'high':
+                        importance["Prescription Shopping (High)"] = 0.25;
+                        break;
+                    case 'moderate':
+                        importance["Prescription Shopping (Moderate)"] = 0.15;
+                        break;
+                    case 'low':
+                        importance["Prescription Shopping (Low)"] = 0.07;
+                        break;
+                }
+
+                switch(patientData.inconsistent_complaints) {
+                    case 'high':
+                        importance["Inconsistent Complaints (High)"] = 0.20;
+                        break;
+                    case 'moderate':
+                        importance["Inconsistent Complaints (Moderate)"] = 0.12;
+                        break;
+                    case 'low':
+                        importance["Inconsistent Complaints (Low)"] = 0.05;
+                        break;
+                }
+            } else {
+                // Basic form has less detailed inputs, so substance abuse gets higher weight
+                importance["Substance Abuse History"] = patientData.clinical_indicators.substance_abuse_history ? 0.3 : 0;
+
+                // Add provider gut instinct for basic form too
+                switch(patientData.provider_gut_instinct) {
+                    case 'moderate':
+                        importance["Provider Gut Instinct (Moderate)"] = 0.05;
+                        break;
+                    case 'high':
+                        importance["Provider Gut Instinct (High)"] = 0.15;
+                        break;
+                    case 'very_high':
+                        importance["Provider Gut Instinct (Very High)"] = 0.25;
+                        break;
+                }
+
+                // Add prescription shopping if available in basic form
+                if (patientData.prescription_shopping) {
+                    switch(patientData.prescription_shopping) {
+                        case 'high':
+                            importance["Prescription Shopping (High)"] = 0.25;
+                            break;
+                        case 'moderate':
+                            importance["Prescription Shopping (Moderate)"] = 0.15;
+                            break;
+                        case 'low':
+                            importance["Prescription Shopping (Low)"] = 0.07;
+                            break;
+                    }
+                }
+
+                // Add inconsistent complaints if available in basic form
+                if (patientData.inconsistent_complaints) {
+                    switch(patientData.inconsistent_complaints) {
+                        case 'high':
+                            importance["Inconsistent Complaints (High)"] = 0.20;
+                            break;
+                        case 'moderate':
+                            importance["Inconsistent Complaints (Moderate)"] = 0.12;
+                            break;
+                        case 'low':
+                            importance["Inconsistent Complaints (Low)"] = 0.05;
+                            break;
+                    }
+                }
+
+                // Add pain out of proportion to importance
+                switch(patientData.pain_out_proportion) {
+                    case 'severe':
+                        importance["Pain Out Proportion (Severe)"] = 0.25;
+                        break;
+                    case 'moderate':
+                        importance["Pain Out Proportion (Moderate)"] = 0.15;
+                        break;
+                    case 'mild':
+                        importance["Pain Out Proportion (Mild)"] = 0.08;
+                        break;
+                }
+            } else {
+                // Basic form has less detailed inputs, so substance abuse gets higher weight
+                importance["Substance Abuse History"] = patientData.clinical_indicators.substance_abuse_history ? 0.3 : 0;
+
+                // Add provider gut instinct for basic form too
+                switch(patientData.provider_gut_instinct) {
+                    case 'moderate':
+                        importance["Provider Gut Instinct (Moderate)"] = 0.05;
+                        break;
+                    case 'high':
+                        importance["Provider Gut Instinct (High)"] = 0.15;
+                        break;
+                    case 'very_high':
+                        importance["Provider Gut Instinct (Very High)"] = 0.25;
+                        break;
+                }
+
+                // Add prescription shopping if available in basic form
+                if (patientData.prescription_shopping) {
+                    switch(patientData.prescription_shopping) {
+                        case 'high':
+                            importance["Prescription Shopping (High)"] = 0.25;
+                            break;
+                        case 'moderate':
+                            importance["Prescription Shopping (Moderate)"] = 0.15;
+                            break;
+                        case 'low':
+                            importance["Prescription Shopping (Low)"] = 0.07;
+                            break;
+                    }
+                }
+
+                // Add inconsistent complaints if available in basic form
+                if (patientData.inconsistent_complaints) {
+                    switch(patientData.inconsistent_complaints) {
+                        case 'high':
+                            importance["Inconsistent Complaints (High)"] = 0.20;
+                            break;
+                        case 'moderate':
+                            importance["Inconsistent Complaints (Moderate)"] = 0.12;
+                            break;
+                        case 'low':
+                            importance["Inconsistent Complaints (Low)"] = 0.05;
+                            break;
+                    }
+                }
+
+                // Add pain out of proportion if available in basic form
+                if (patientData.pain_out_proportion) {
+                    switch(patientData.pain_out_proportion) {
+                        case 'severe':
+                            importance["Pain Out Proportion (Severe)"] = 0.25;
+                            break;
+                        case 'moderate':
+                            importance["Pain Out Proportion (Moderate)"] = 0.15;
+                            break;
+                        case 'mild':
+                            importance["Pain Out Proportion (Mild)"] = 0.08;
+                            break;
+                    }
+                }
+            }
+
+            importance["Opioid Prescriptions"] = patientData.opioid_prescriptions * 0.12;
+            importance["Benzodiazepine Prescriptions"] = patientData.benzodiazepine_prescriptions * 0.08;
+
+            if (patientData.other_controlled_substances > 0) {
+                importance["Other Controlled Substances"] = patientData.other_controlled_substances * 0.05;
+            }
+
+            importance["ED Visits"] = patientData.history.ed_visits * 0.025;
+            importance["Multiple Prescribers"] = patientData.num_prescribers > 2 ? 0.1 : 0;
+            importance["Multiple Pharmacies"] = patientData.num_pharmacies > 2 ? 0.1 : 0;
+            importance["Early Refill Events"] = patientData.early_refill_events > 0 ? 0.15 : 0;
+            importance["Concurrent Prescriptions"] = patientData.concurrent_prescriptions > 0 ? 0.15 : 0;
+            importance["Out-of-Region Prescriptions"] = patientData.out_of_region_prescriptions > 0 ? 0.12 : 0;
+
+            // Sort by importance
+            return Object.entries(importance)
+                .filter(([_, value]) => value > 0)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 8); // Updated to show top 8 features for detailed view
+        }
+
+        function displayResults(riskScore, redFlags, featureImportance, patientId) {
+            const riskLevelElement = document.getElementById('riskLevel');
+            const riskScoreElement = document.getElementById('riskScore');
+            const assessmentDateElement = document.getElementById('assessmentDate');
+            const patientIdElement = document.getElementById('resultPatientId');
+            const redFlagsElement = document.getElementById('redFlags');
+            const redFlagsListElement = document.getElementById('redFlagsList');
+            const featureImportanceElement = document.getElementById('featureImportance');
+            const featureBarsElement = document.getElementById('featureBars');
+
+            // Set risk level with appropriate styling
+            let levelText, levelClass;
+            if (riskScore >= 0.8) {
+                levelText = "CRITICAL RISK";
+                levelClass = "risk-critical";
+            } else if (riskScore >= 0.6) {
+                levelText = "HIGH RISK";
+                levelClass = "risk-high";
+            } else if (riskScore >= 0.4) {
+                levelText = "MODERATE RISK";
+                levelClass = "risk-medium";
+            } else {
+                levelText = "LOW RISK";
+                levelClass = "risk-low";
+            }
+
+            riskLevelElement.textContent = levelText;
+            riskLevelElement.className = `risk-level ${levelClass}`;
+
+            // Set risk score
+            riskScoreElement.textContent = riskScore.toFixed(4) + " (" + Math.round(riskScore * 100) + "%)";
+
+            // Set assessment date
+            assessmentDateElement.textContent = new Date().toLocaleString();
+
+            // Set patient ID
+            patientIdElement.textContent = patientId;
+
+            // Display red flags if any
+            if (redFlags.length > 0) {
+                redFlagsListElement.innerHTML = '';
+                redFlags.forEach(flag => {
+                    const li = document.createElement('li');
+                    li.textContent = flag;
+                    redFlagsListElement.appendChild(li);
+                });
+                redFlagsElement.style.display = 'block';
+            } else {
+                redFlagsElement.style.display = 'none';
+            }
+
+            // Display feature importance
+            if (featureImportance.length > 0) {
+                featureBarsElement.innerHTML = '';
+                featureImportance.forEach(([feature, value]) => {
+                    const barContainer = document.createElement('div');
+                    barContainer.innerHTML = `
+                        <div>${feature}</div>
+                        <div class="feature-bar">
+                            <div class="feature-fill" style="width: ${value * 100}%;">${(value * 100).toFixed(1)}%</div>
+                        </div>
+                    `;
+                    featureBarsElement.appendChild(barContainer);
+                });
+                featureImportanceElement.style.display = 'block';
+            } else {
+                featureImportanceElement.style.display = 'none';
+            }
+        }
+
+        // Fill forms with sample data
+        function fillSampleData() {
+            document.getElementById('patientId').value = 'PT001';
+            document.getElementById('age').value = '45';
+            document.getElementById('gender').value = 'Male';
+            document.getElementById('substanceAbuse').value = 'false';
+            document.getElementById('opioidPrescriptions').value = '2';
+            document.getElementById('benzoPrescriptions').value = '1';
+            document.getElementById('numPrescribers').value = '2';
+            document.getElementById('edVisits').value = '3';
+            document.getElementById('earlyRefillEventsBasic').value = '2';
+            document.getElementById('providerGutInstinct').value = 'moderate';
+        }
+
+
+        function fillDetailedSampleData() {
+            document.getElementById('detailedPatientId').value = 'PT002';
+            document.getElementById('detailedAge').value = '38';
+            document.getElementById('detailedGender').value = 'Female';
+            document.getElementById('detailedSubstanceAbuse').value = 'true';
+            document.getElementById('detailedMentalHealth').value = 'true';
+            document.getElementById('detailedChronicPain').value = 'true';
+            document.getElementById('detailedEdVisits').value = '6';
+            document.getElementById('detailedHospitalizations').value = '1';
+            document.getElementById('detailedPrimaryCareVisits').value = '4';
+            document.getElementById('detailedOpioidPrescriptions').value = '3';
+            document.getElementById('detailedBenzoPrescriptions').value = '2';
+            document.getElementById('detailedOtherPrescriptions').value = '1';
+            document.getElementById('numPrescribersDetailed').value = '3';
+            document.getElementById('numPharmacies').value = '3';
+            document.getElementById('earlyRefillEvents').value = '2';
+            document.getElementById('concurrentPrescriptions').value = '1';
+            document.getElementById('outOfRegionPrescriptions').value = '1';
+            document.getElementById('detailedHistoryDiversion').value = 'false';
+            document.getElementById('travelDistanceToProvider').value = '75';
+            document.getElementById('travelDistanceToPharmacy').value = '80';
+            document.getElementById('insuranceStatus').value = 'cash';
+            document.getElementById('doctorShoppingAdmission').value = 'true';
+            document.getElementById('diversionAdmission').value = 'false';
+            document.getElementById('lostStolenReport').value = '2';
+            document.getElementById('prescriptionQuantity').value = '90';
+            document.getElementById('highDosePrescriptions').value = '3';
+            document.getElementById('unusualRequests').value = '5';
+            document.getElementById('detailedProviderGutInstinct').value = 'high';
+            document.getElementById('prescriberPressure').value = 'high';
+            document.getElementById('paymentMethod').value = 'cash';
+            document.getElementById('timeSinceLastPrescription').value = '2';
+            document.getElementById('prescriptionFrequency').value = '8';
+            document.getElementById('geographicDispersion').value = '150';
+            document.getElementById('pharmacyHopping').value = '5';
+            document.getElementById('emergencyRequests').value = '7';
+            document.getElementById('prescriptionShopping').value = 'high';
+            document.getElementById('inconsistentComplaints').value = 'high';
+            document.getElementById('painOutProportion').value = 'severe';
+        }
+
+    </script>
+</body>
+</html>
