@@ -1483,7 +1483,7 @@
                     }
                 }
 
-                // Add pain out of proportion to importance
+                // Add pain out of proportion to importance (only in detailed form)
                 switch(patientData.pain_out_proportion) {
                     case 'severe':
                         importance["Pain Out Proportion (Severe)"] = 0.25;
@@ -1495,69 +1495,9 @@
                         importance["Pain Out Proportion (Mild)"] = 0.08;
                         break;
                 }
-            } else {
-                // Basic form has less detailed inputs, so substance abuse gets higher weight
-                importance["Substance Abuse History"] = patientData.clinical_indicators.substance_abuse_history ? 0.3 : 0;
+            } // End of else block
 
-                // Add provider gut instinct for basic form too
-                switch(patientData.provider_gut_instinct) {
-                    case 'moderate':
-                        importance["Provider Gut Instinct (Moderate)"] = 0.05;
-                        break;
-                    case 'high':
-                        importance["Provider Gut Instinct (High)"] = 0.15;
-                        break;
-                    case 'very_high':
-                        importance["Provider Gut Instinct (Very High)"] = 0.25;
-                        break;
-                }
-
-                // Add prescription shopping if available in basic form
-                if (patientData.prescription_shopping) {
-                    switch(patientData.prescription_shopping) {
-                        case 'high':
-                            importance["Prescription Shopping (High)"] = 0.25;
-                            break;
-                        case 'moderate':
-                            importance["Prescription Shopping (Moderate)"] = 0.15;
-                            break;
-                        case 'low':
-                            importance["Prescription Shopping (Low)"] = 0.07;
-                            break;
-                    }
-                }
-
-                // Add inconsistent complaints if available in basic form
-                if (patientData.inconsistent_complaints) {
-                    switch(patientData.inconsistent_complaints) {
-                        case 'high':
-                            importance["Inconsistent Complaints (High)"] = 0.20;
-                            break;
-                        case 'moderate':
-                            importance["Inconsistent Complaints (Moderate)"] = 0.12;
-                            break;
-                        case 'low':
-                            importance["Inconsistent Complaints (Low)"] = 0.05;
-                            break;
-                    }
-                }
-
-                // Add pain out of proportion if available in basic form
-                if (patientData.pain_out_proportion) {
-                    switch(patientData.pain_out_proportion) {
-                        case 'severe':
-                            importance["Pain Out Proportion (Severe)"] = 0.25;
-                            break;
-                        case 'moderate':
-                            importance["Pain Out Proportion (Moderate)"] = 0.15;
-                            break;
-                        case 'mild':
-                            importance["Pain Out Proportion (Mild)"] = 0.08;
-                            break;
-                    }
-                }
-            }
-
+            // Common importance calculations for both detailed and basic forms
             importance["Opioid Prescriptions"] = patientData.opioid_prescriptions * 0.12;
             importance["Benzodiazepine Prescriptions"] = patientData.benzodiazepine_prescriptions * 0.08;
 

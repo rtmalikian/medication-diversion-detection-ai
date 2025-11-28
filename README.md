@@ -235,6 +235,22 @@ This tool incorporates evidence-based risk factors from peer-reviewed research i
 
 All risk factors are weighted based on clinical evidence and research findings.
 
+## Screenshots
+
+Here are some screenshots of the Clinical Risk Modeling Engine:
+
+### Professional Verification Screen
+![Professional Verification](images/verification-screen.png)
+
+### Basic Assessment Form
+![Basic Assessment](images/basic-assessment.png)
+
+### Detailed Assessment Form
+![Detailed Assessment](images/detailed-assessment.png)
+
+### Risk Assessment Results
+![Risk Results](images/risk-results.png)
+
 ## Creator Information
 
 **Raphael Tomas Malikian**
