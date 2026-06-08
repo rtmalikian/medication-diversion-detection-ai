@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-06-08
+### Security
+- Fixed path traversal vulnerability in model upload endpoint: user-controlled filenames could write files outside the models directory via `../` sequences
+- Added filename sanitization with strict allowlist for alphanumeric characters, hyphens, underscores, and dots
+- Added file extension allowlist (.pkl, .joblib) to prevent upload of arbitrary file types
+- Added maximum upload size limit (100 MB) to prevent denial-of-service
+- Randomized stored filenames with cryptographic prefix to prevent overwrite attacks
+- Added upload validation: uploaded model is tested via joblib.load before confirming success; invalid files are cleaned up
+- Added security documentation warning about unsafe pickle deserialization in model loading
+- Replaced broken `utils.logging` import with stdlib `logging` in model_management.py
+
 ## [0.1.0] - 2025-11-28
 ### Added
 - Initial project structure with api, data, models, services, utils, and tests directories

@@ -3,11 +3,51 @@ from pydantic import BaseModel
 from typing import Optional, Dict, Any
 from datetime import datetime
 import os
+import re
+import secrets
+import logging
 
 from models.diversion_detection import DiversionDetectionModel
-from utils.logging import logger
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+# Security constants for model uploads
+ALLOWED_MODEL_EXTENSIONS = {".pkl", ".joblib"}
+MAX_UPLOAD_SIZE_BYTES = 100 * 1024 * 1024  # 100 MB
+UPLOAD_DIR = "models"
+
+
+def _sanitize_filename(filename: str) -> str:
+    """
+    Sanitize an uploaded filename to prevent path traversal and injection.
+
+    - Strips directory components (prevents ../ traversal)
+    - Allows only alphanumeric, hyphens, underscores, dots
+    - Rejects hidden files (starting with .)
+    - Rejects empty or excessively long names
+    """
+    if not filename:
+        raise ValueError("Filename cannot be empty")
+
+    # Strip all directory components — only keep the basename
+    basename = os.path.basename(filename)
+
+    if not basename or basename.startswith("."):
+        raise ValueError("Invalid filename: hidden files are not allowed")
+
+    if len(basename) > 255:
+        raise ValueError("Filename too long (max 255 characters)")
+
+    # Allow only safe characters: alphanumeric, hyphen, underscore, dot
+    if not re.match(r"^[a-zA-Z0-9_\-]+(\.[a-zA-Z0-9]+)+$", basename):
+        raise ValueError(
+            "Filename must contain only letters, numbers, hyphens, underscores, "
+            "and a valid extension (e.g., model_v1.pkl)"
+        )
+
+    return basename
 
 class ModelInfo(BaseModel):
     model_name: str
@@ -109,28 +149,87 @@ async def predict(request: ModelPredictionRequest):
 @router.post("/upload-model")
 async def upload_model(file: UploadFile = File(...)):
     """
-    Upload a pre-trained model file
+    Upload a pre-trained model file.
+
+    Security measures applied:
+    - Filename sanitization to prevent path traversal (e.g., ../../etc/passwd)
+    - File extension allowlist (.pkl, .joblib only)
+    - Maximum upload size limit (100 MB)
+    - Randomized storage filename to prevent overwrites and naming conflicts
+
+    ⚠️ WARNING: Model files are loaded via joblib (pickle), which can execute
+    arbitrary code. Only upload model files from trusted sources. In production,
+    consider using a safe serialization format (e.g., ONNX) or enforcing
+    cryptographic signatures on uploaded models.
     """
     try:
-        logger.info(f"Uploading model file: {file.filename}")
-        
-        # Save uploaded file to models directory
-        upload_path = f"models/{file.filename}"
+        # Validate filename (prevents path traversal)
+        if not file.filename:
+            raise HTTPException(status_code=400, detail="Filename is required")
+        try:
+            safe_name = _sanitize_filename(file.filename)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+        # Validate file extension
+        ext = os.path.splitext(safe_name)[1].lower()
+        if ext not in ALLOWED_MODEL_EXTENSIONS:
+            raise HTTPException(
+                status_code=400,
+                detail=f"File extension '{ext}' not allowed. "
+                       f"Accepted: {', '.join(sorted(ALLOWED_MODEL_EXTENSIONS))}"
+            )
+
+        # Read content with size limit
+        content = await file.read()
+        if len(content) > MAX_UPLOAD_SIZE_BYTES:
+            raise HTTPException(
+                status_code=413,
+                detail=f"File exceeds maximum upload size of "
+                       f"{MAX_UPLOAD_SIZE_BYTES // (1024 * 1024)} MB"
+            )
+
+        # Use a randomized filename to prevent overwrites and naming attacks
+        random_prefix = secrets.token_hex(8)
+        stored_name = f"{random_prefix}_{safe_name}"
+        upload_path = os.path.join(UPLOAD_DIR, stored_name)
+
+        # Ensure the upload directory exists
+        os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+        # Write file
         with open(upload_path, "wb") as f:
-            content = await file.read()
             f.write(content)
-        
-        # Load the new model
-        model = DiversionDetectionModel()
-        model.load_model(model_path=upload_path)
-        
+
+        logger.info(
+            "Model file uploaded: original='%s', stored='%s', size=%d bytes",
+            file.filename, stored_name, len(content)
+        )
+
+        # Validate the uploaded model can be loaded
+        try:
+            model = DiversionDetectionModel()
+            model.load_model(model_path=upload_path)
+            logger.info("Uploaded model loaded and validated successfully")
+        except Exception as load_err:
+            # Clean up invalid file
+            if os.path.exists(upload_path):
+                os.remove(upload_path)
+            logger.warning("Uploaded model failed validation: %s", load_err)
+            raise HTTPException(
+                status_code=422,
+                detail="Uploaded file is not a valid model file and could not be loaded"
+            )
+
         return {
-            "message": f"Model {file.filename} uploaded and loaded successfully",
-            "filename": file.filename
+            "message": f"Model uploaded and loaded successfully",
+            "filename": stored_name
         }
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Error uploading model: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error("Error uploading model: %s", e)
+        raise HTTPException(status_code=500, detail="Internal server error during model upload")
 
 @router.get("/model-performance")
 async def get_model_performance():
