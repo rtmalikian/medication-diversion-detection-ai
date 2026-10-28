@@ -87,3 +87,8 @@ docs/_build/
 
 # Jupyter Notebooks
 .ipynb_checkpoints/
+# v2 runtime/test artifacts
+data/
+data-v2/
+tests_v2/test_mdr.sqlite3
+evals/eval_results.json.tmp

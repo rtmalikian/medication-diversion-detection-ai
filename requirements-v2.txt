@@ -1,0 +1,13 @@
+# v2 upgrade — light deps (the legacy v1 stack stays in requirements.txt)
+fastapi>=0.115
+uvicorn[standard]>=0.30
+httpx>=0.27
+pydantic>=2.7
+python-multipart>=0.0.9
+pytest>=8.0
+pytest-anyio>=0.0.0
+# Only needed so the adapter can run the ORIGINAL repo modules
+# (services/evaluation_framework.py, data/processor.py) for provenance:
+pandas>=2.0
+numpy>=1.26
+pydantic-settings>=2.0

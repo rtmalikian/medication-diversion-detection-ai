@@ -1,0 +1,373 @@
+{
+ "n_cases": 31,
+ "per_layer": {
+  "A": {
+   "tp": 14,
+   "fp": 0,
+   "fn": 0,
+   "precision": 1.0,
+   "recall": 1.0
+  },
+  "B": {
+   "tp": 5,
+   "fp": 0,
+   "fn": 0,
+   "precision": 1.0,
+   "recall": 1.0
+  },
+  "C": {
+   "tp": 6,
+   "fp": 1,
+   "fn": 0,
+   "precision": 0.857,
+   "recall": 1.0
+  }
+ },
+ "benign_cases": 12,
+ "benign_flagged_elevated_or_high": 0,
+ "benign_false_flag_rate": 0.0,
+ "rows": [
+  {
+   "case": "a_multi_prescriber",
+   "zone": "lower",
+   "total": 10,
+   "subscores": {
+    "layer_a_published_guideline": 10,
+    "layer_b_ai_chart_review": 0,
+    "layer_c_expert_lived_experience_unvalidated": 0,
+    "layer_c_of_which_contradictions_mrd": 0
+   }
+  },
+  {
+   "case": "a_multi_pharmacy",
+   "zone": "lower",
+   "total": 8,
+   "subscores": {
+    "layer_a_published_guideline": 8,
+    "layer_b_ai_chart_review": 0,
+    "layer_c_expert_lived_experience_unvalidated": 0,
+    "layer_c_of_which_contradictions_mrd": 0
+   }
+  },
+  {
+   "case": "a_overlap",
+   "zone": "elevated",
+   "total": 15,
+   "subscores": {
+    "layer_a_published_guideline": 15,
+    "layer_b_ai_chart_review": 0,
+    "layer_c_expert_lived_experience_unvalidated": 0,
+    "layer_c_of_which_contradictions_mrd": 0
+   }
+  },
+  {
+   "case": "a_early_refill",
+   "zone": "lower",
+   "total": 10,
+   "subscores": {
+    "layer_a_published_guideline": 10,
+    "layer_b_ai_chart_review": 0,
+    "layer_c_expert_lived_experience_unvalidated": 0,
+    "layer_c_of_which_contradictions_mrd": 0
+   }
+  },
+  {
+   "case": "a_mme50",
+   "zone": "lower",
+   "total": 7,
+   "subscores": {
+    "layer_a_published_guideline": 7,
+    "layer_b_ai_chart_review": 0,
+    "layer_c_expert_lived_experience_unvalidated": 0,
+    "layer_c_of_which_contradictions_mrd": 0
+   }
+  },
+  {
+   "case": "a_mme90",
+   "zone": "lower",
+   "total": 12,
+   "subscores": {
+    "layer_a_published_guideline": 12,
+    "layer_b_ai_chart_review": 0,
+    "layer_c_expert_lived_experience_unvalidated": 0,
+    "layer_c_of_which_contradictions_mrd": 0
+   }
+  },
+  {
+   "case": "a_escalation",
+   "zone": "lower",
+   "total": 8,
+   "subscores": {
+    "layer_a_published_guideline": 8,
+    "layer_b_ai_chart_review": 0,
+    "layer_c_expert_lived_experience_unvalidated": 0,
+    "layer_c_of_which_contradictions_mrd": 0
+   }
+  },
+  {
+   "case": "a_ort",
+   "zone": "lower",
+   "total": 10,
+   "subscores": {
+    "layer_a_published_guideline": 10,
+    "layer_b_ai_chart_review": 0,
+    "layer_c_expert_lived_experience_unvalidated": 0,
+    "layer_c_of_which_contradictions_mrd": 0
+   }
+  },
+  {
+   "case": "a_comm",
+   "zone": "lower",
+   "total": 8,
+   "subscores": {
+    "layer_a_published_guideline": 8,
+    "layer_b_ai_chart_review": 0,
+    "layer_c_expert_lived_experience_unvalidated": 0,
+    "layer_c_of_which_contradictions_mrd": 0
+   }
+  },
+  {
+   "case": "a_prior_diversion",
+   "zone": "lower",
+   "total": 12,
+   "subscores": {
+    "layer_a_published_guideline": 12,
+    "layer_b_ai_chart_review": 0,
+    "layer_c_expert_lived_experience_unvalidated": 0,
+    "layer_c_of_which_contradictions_mrd": 0
+   }
+  },
+  {
+   "case": "a_combo_high",
+   "zone": "high",
+   "total": 47,
+   "subscores": {
+    "layer_a_published_guideline": 47,
+    "layer_b_ai_chart_review": 0,
+    "layer_c_expert_lived_experience_unvalidated": 0,
+    "layer_c_of_which_contradictions_mrd": 0
+   }
+  },
+  {
+   "case": "b_lost",
+   "zone": "lower",
+   "total": 6,
+   "subscores": {
+    "layer_a_published_guideline": 0,
+    "layer_b_ai_chart_review": 6,
+    "layer_c_expert_lived_experience_unvalidated": 0,
+    "layer_c_of_which_contradictions_mrd": 0
+   }
+  },
+  {
+   "case": "b_outside",
+   "zone": "lower",
+   "total": 6,
+   "subscores": {
+    "layer_a_published_guideline": 0,
+    "layer_b_ai_chart_review": 6,
+    "layer_c_expert_lived_experience_unvalidated": 0,
+    "layer_c_of_which_contradictions_mrd": 0
+   }
+  },
+  {
+   "case": "b_uds",
+   "zone": "lower",
+   "total": 6,
+   "subscores": {
+    "layer_a_published_guideline": 0,
+    "layer_b_ai_chart_review": 6,
+    "layer_c_expert_lived_experience_unvalidated": 0,
+    "layer_c_of_which_contradictions_mrd": 0
+   }
+  },
+  {
+   "case": "b_two_flags",
+   "zone": "lower",
+   "total": 12,
+   "subscores": {
+    "layer_a_published_guideline": 0,
+    "layer_b_ai_chart_review": 12,
+    "layer_c_expert_lived_experience_unvalidated": 0,
+    "layer_c_of_which_contradictions_mrd": 0
+   }
+  },
+  {
+   "case": "c_travel_cash",
+   "zone": "lower",
+   "total": 6,
+   "subscores": {
+    "layer_a_published_guideline": 0,
+    "layer_b_ai_chart_review": 0,
+    "layer_c_expert_lived_experience_unvalidated": 6,
+    "layer_c_of_which_contradictions_mrd": 0
+   }
+  },
+  {
+   "case": "c_declines",
+   "zone": "lower",
+   "total": 7,
+   "subscores": {
+    "layer_a_published_guideline": 0,
+    "layer_b_ai_chart_review": 0,
+    "layer_c_expert_lived_experience_unvalidated": 7,
+    "layer_c_of_which_contradictions_mrd": 0
+   }
+  },
+  {
+   "case": "c_confirmed_conversation",
+   "zone": "lower",
+   "total": 5,
+   "subscores": {
+    "layer_a_published_guideline": 0,
+    "layer_b_ai_chart_review": 0,
+    "layer_c_expert_lived_experience_unvalidated": 5,
+    "layer_c_of_which_contradictions_mrd": 0
+   }
+  },
+  {
+   "case": "c_mrd_repeated_directional",
+   "zone": "lower",
+   "total": 8,
+   "subscores": {
+    "layer_a_published_guideline": 0,
+    "layer_b_ai_chart_review": 0,
+    "layer_c_expert_lived_experience_unvalidated": 8,
+    "layer_c_of_which_contradictions_mrd": 8
+   }
+  },
+  {
+   "case": "benign_stable",
+   "zone": "lower",
+   "total": 0,
+   "subscores": {
+    "layer_a_published_guideline": 0,
+    "layer_b_ai_chart_review": 0,
+    "layer_c_expert_lived_experience_unvalidated": 0,
+    "layer_c_of_which_contradictions_mrd": 0
+   }
+  },
+  {
+   "case": "benign_cancer_escalation",
+   "zone": "lower",
+   "total": 0,
+   "subscores": {
+    "layer_a_published_guideline": 0,
+    "layer_b_ai_chart_review": 0,
+    "layer_c_expert_lived_experience_unvalidated": 0,
+    "layer_c_of_which_contradictions_mrd": 0
+   }
+  },
+  {
+   "case": "benign_moud_stable",
+   "zone": "lower",
+   "total": 0,
+   "subscores": {
+    "layer_a_published_guideline": 0,
+    "layer_b_ai_chart_review": 0,
+    "layer_c_expert_lived_experience_unvalidated": 0,
+    "layer_c_of_which_contradictions_mrd": 0
+   }
+  },
+  {
+   "case": "benign_benzo_tapered_off",
+   "zone": "lower",
+   "total": 0,
+   "subscores": {
+    "layer_a_published_guideline": 0,
+    "layer_b_ai_chart_review": 0,
+    "layer_c_expert_lived_experience_unvalidated": 0,
+    "layer_c_of_which_contradictions_mrd": 0
+   }
+  },
+  {
+   "case": "benign_cash_no_insurance",
+   "zone": "lower",
+   "total": 0,
+   "subscores": {
+    "layer_a_published_guideline": 0,
+    "layer_b_ai_chart_review": 0,
+    "layer_c_expert_lived_experience_unvalidated": 0,
+    "layer_c_of_which_contradictions_mrd": 0
+   }
+  },
+  {
+   "case": "benign_single_minor_contradiction",
+   "zone": "lower",
+   "total": 0,
+   "subscores": {
+    "layer_a_published_guideline": 0,
+    "layer_b_ai_chart_review": 0,
+    "layer_c_expert_lived_experience_unvalidated": 0,
+    "layer_c_of_which_contradictions_mrd": 0
+   }
+  },
+  {
+   "case": "benign_poor_historian_single",
+   "zone": "lower",
+   "total": 0,
+   "subscores": {
+    "layer_a_published_guideline": 0,
+    "layer_b_ai_chart_review": 0,
+    "layer_c_expert_lived_experience_unvalidated": 0,
+    "layer_c_of_which_contradictions_mrd": 0
+   }
+  },
+  {
+   "case": "benign_random_direction_mistakes",
+   "zone": "lower",
+   "total": 2,
+   "subscores": {
+    "layer_a_published_guideline": 0,
+    "layer_b_ai_chart_review": 0,
+    "layer_c_expert_lived_experience_unvalidated": 2,
+    "layer_c_of_which_contradictions_mrd": 2
+   }
+  },
+  {
+   "case": "benign_chart_error",
+   "zone": "lower",
+   "total": 0,
+   "subscores": {
+    "layer_a_published_guideline": 0,
+    "layer_b_ai_chart_review": 0,
+    "layer_c_expert_lived_experience_unvalidated": 0,
+    "layer_c_of_which_contradictions_mrd": 0
+   }
+  },
+  {
+   "case": "benign_interpreted_inconsistency",
+   "zone": "lower",
+   "total": 0,
+   "subscores": {
+    "layer_a_published_guideline": 0,
+    "layer_b_ai_chart_review": 0,
+    "layer_c_expert_lived_experience_unvalidated": 0,
+    "layer_c_of_which_contradictions_mrd": 0
+   }
+  },
+  {
+   "case": "benign_rural_travel_only_if_unconfirmed",
+   "zone": "lower",
+   "total": 0,
+   "subscores": {
+    "layer_a_published_guideline": 0,
+    "layer_b_ai_chart_review": 0,
+    "layer_c_expert_lived_experience_unvalidated": 0,
+    "layer_c_of_which_contradictions_mrd": 0
+   }
+  },
+  {
+   "case": "benign_two_pharmacies",
+   "zone": "lower",
+   "total": 0,
+   "subscores": {
+    "layer_a_published_guideline": 0,
+    "layer_b_ai_chart_review": 0,
+    "layer_c_expert_lived_experience_unvalidated": 0,
+    "layer_c_of_which_contradictions_mrd": 0
+   }
+  }
+ ],
+ "label": "SYNTHETIC planted-signal battery \u2014 pipeline correctness only, NOT clinical accuracy"
+}

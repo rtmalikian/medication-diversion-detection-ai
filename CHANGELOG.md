@@ -6,6 +6,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-10-28 — v2 upgrade (additive; v1 preserved)
+### Added
+- `v2/` package + `app_v2.py`: transparent three-layer scoring (A guideline/FHIR rules, B verified-quote AI chart review, C expert/lived-experience Tier 4, capped/disable-able) with every weight in `v2/scoring_config.json` and a factor-by-factor mapping from the original scoring in `SCORING.md`.
+- The **MRD Escalator** (`v2/contradictions.py`): history–chart contradictions scored by Materiality × Repetition × Directionality; single instance = informational/0 points; chart-error → correction request.
+- Embedded OpenAI-compatible gateway: `/v1/chat/completions`, `/v1/models`, `/v1/embeddings`, `/v1/audio/transcriptions` (stub / local / API-key upstream backends).
+- Real FHIR R4 client (`v2/fhir_client.py`) replacing the plan-only description: Patient/MedicationRequest/MedicationDispense/Encounter/Observation/Condition → Chart; mock-server + Synthea-format bundle tests. `EHR_INTEGRATION.md` now documents the implemented client first.
+- Ambient scribe (`v2/scribe.py`): consent gate in code, audio not retained by default, diarizers behind an interface, five concrete content signals, clinician confirmation queue.
+- RBAC-lite API keys, SQLite persistence, hash-chained audit log (`v2/store.py`).
+- Original-format adapter (`v2/original_adapter.py`): scores the original repo's patient dicts in v2 and returns the original framework's result as provenance.
+- Docs: standard proof-of-concept disclaimer at the very top of the README (v1 README did not carry it), `SCORING.md`, `EVIDENCE.md` (tiered, verified citations; unverifiable v1-era claims removed), `BIAS.md`, `EVALS.md`, `SECURITY.md`, `ARCHITECTURE.md`, `docs/VALIDATION_ROADMAP.md`.
+- Tests: 67 v2 tests in `tests_v2/` + a 31-case synthetic eval battery (`v2/evals.py`, `scripts/run_eval.py`).
+### Changed
+- MME: original simplified factors (fentanyl ×100, methadone ×3 flat) replaced by the CDC factor table with methadone sliding scale.
+- Concurrent benzo/opioid: name-count check replaced by true date-overlap computation.
+- Substance-abuse and mental-health history, young-adult band, age, and gender are **no longer scoring inputs** in v2 (reasons in SCORING.md/BIAS.md). Substance-use history routes support offers at 0 points.
+### Fixed
+- `data/processor.py` crashed on ISO string prescription dates (the format the original tests use); dates are now parsed. Legacy evaluation framework + processor smoke-verified after the fix.
+
 ## [0.1.2] - 2026-06-08
 ### Security
 - Fixed path traversal vulnerability in model upload endpoint: user-controlled filenames could write files outside the models directory via `../` sequences

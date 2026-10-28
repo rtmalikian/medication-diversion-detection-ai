@@ -1,0 +1,9 @@
+services:
+  diversion-risk-radar-v2:
+    build: .
+    ports: ["8000:8000"]
+    environment:
+      AI_BACKEND: stub   # use local (Ollama) or upstream + AI_API_KEY under a BAA — see SECURITY.md
+      MDR_API_KEYS: "viewer:demo-viewer:demo-viewer,scorer:demo-scorer:demo-scorer,admin:demo-admin:demo-admin"
+    volumes:
+      - ./data-v2:/app/data

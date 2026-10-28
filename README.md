@@ -1,287 +1,76 @@
-# Clinical Risk Modeling Engine for Medication Diversion Detection | AI-Powered Opioid Diversion Prevention Tool
+> ## ⚠️ PROOF OF CONCEPT — NOT CLINICALLY TESTED
+>
+> **This tool has not been tested clinically and is a proof-of-concept for
+> research and software demonstration only. It is not a medical device, it
+> does not diagnose, treat, or rule out any condition, and its outputs may
+> be wrong — including false positives and false negatives.**
+>
+> **Do not use it to make decisions about your health.**
+> For any medical issue or concern, seek a licensed healthcare professional.
+> **In an emergency, go to your nearest emergency room or dial 911 immediately.**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/rtmalikian/diversion-detection/graphs/commit-activity)
+**Product-specific limits (in addition to the banner above):** this system produces *patterns for clinician review*, never labels on people. It never accuses a patient, never denies care, never reports to law enforcement, and never acts without a human clinician. **Sensitivity and specificity are UNKNOWN — the composite score is unvalidated.** False positives occur (chronic pain, cancer care, recovery on MOUD, interpreted encounters, fragmented care, record errors) and false negatives occur (a lower score does not rule out misuse or diversion). Ambient audio features are **consent-first** (no documented consent → processing is refused in code), audio is **not retained by default**, and conversation signals are verbatim quotes a clinician must confirm before they can count. The system detects **no psychological states** — deception detection from speech is near chance in the literature (54%, Bond & DePaulo 2006), so the scribe extracts only concrete, checkable content. See `BIAS.md` and `EVIDENCE.md`.
 
-## ⚠️ IMPORTANT DISCLAIMER & INTELLECTUAL PROPERTY NOTICE
-**THIS IS A PROTOTYPE DEMONSTRATION ONLY. This software is NOT intended for clinical use, is not designed to treat or diagnose any medical condition, and should not be used for actual clinical decision making. This prototype is for demonstration and research purposes only. Any use for actual patient care is strictly prohibited until proper validation, regulatory approval, and clinical trials have been completed.**
+# Diversion Risk Radar — Medication Diversion Detection AI (v2) | Evidence-Based Controlled-Substance Diversion & Misuse Risk Scoring with FHIR EHR Integration, AI Chart Review, and Ambient Scribe Conversation Signals
 
-**INTELLECTUAL PROPERTY RIGHTS**: This Clinical Risk Modeling Engine is the intellectual property of Raphael Tomas Malikian. Any use of this tool must provide proper attribution to the creator. Commercial use is strictly prohibited without explicit written permission and licensing. For permission inquiries, please contact the author directly.
+**Medication diversion detection, opioid stewardship, PDMP risk signals, controlled-substance monitoring, MME calculation, FHIR R4 EHR integration, ambient clinical scribe, AI chart review, and clinician-review flagging — in one open, test-covered system.**
 
-## Overview
+Built by [Raphael Malikian](https://github.com/rtmalikian) — healthcare founder/operator (bootstrapped and ran a direct primary care clinic as CEO) now building clinical AI. His original scoring (v1, preserved in this repo) came from that clinical practice and from lived experience in recovery; v2 keeps every original factor accounted for — see the factor-by-factor mapping in [`SCORING.md`](SCORING.md).
 
-The **Clinical Risk Modeling Engine** is an AI-powered clinical decision support tool (CDST) designed to proactively identify and flag high-risk polypharmacy and potential medication safety/diversion scenarios. Built with machine learning and evidence-based guidelines from DEA, CDC, and SAMHSA, this system addresses the critical challenge of prescription drug diversion, particularly opioids and controlled substances.
+## What v2 adds over the original repo
 
-### Available in Two Formats:
-1. **Full Enterprise System**: Backend API with EHR integration capabilities (Under Development)
-2. **Standalone Web Tool**: Browser-based assessment tool (Prototype Ready)
+| Capability | v1 (original) | v2 (this upgrade) |
+|---|---|---|
+| Scoring | Gradient Boosting ML + DEA/CDC/SAMHSA flag framework, blended 0.6/0.3/0.1 into one opaque 0–1 score | **Transparent three-layer score**, always reported separately, every weight in `v2/scoring_config.json` traceable to `SCORING.md` (legacy blend preserved for comparison; v2 API doesn't use it) |
+| EHR integration | `EHR_INTEGRATION.md` described FHIR/Epic/Cerner plans | **Working FHIR R4 client** (`v2/fhir_client.py`): Patient, MedicationRequest, MedicationDispense, Encounter, Observation, Condition → deterministic rules; tested against a mock FHIR server + Synthea-format bundle |
+| AI chart review | — | Embedded **OpenAI-compatible gateway** (`/v1/chat/completions`, `/v1/models`, `/v1/embeddings`, `/v1/audio/transcriptions`; local Ollama/llama.cpp or API-key upstream). LLM flags score **only with a verbatim quote verified against the chart** — hallucinated quotes are dropped and counted |
+| Ambient scribe | — | Consent-gated speech-to-text pipeline → diarized transcript → **concrete content signals only** (chart-inconsistent statements, explicit threats/coercion wording, plan contradictions, admissions of sharing/selling, third-party pressure) → **clinician confirmation queue**; only confirmed quotes score |
+| Audit & access | Database service | RBAC-lite API keys + **hash-chained audit log** (who viewed/scored whom, tamper-evident) |
+| Evidence discipline | "DEA/CDC/SAMHSA guidelines" framing | `EVIDENCE.md` with tiered, verified citations; thresholds labelled guideline-sourced or **app-defined**; `BIAS.md`; eval battery with benign look-alikes (`EVALS.md`) |
 
-## Key Features
+## The three layers (never merged silently)
 
-### 🔍 Comprehensive Risk Assessment
-- **Evidence-based evaluation framework** using DEA, CDC, and SAMHSA guidelines
-- **XAI (Explainable AI)** with SHAP/LIME analysis for clinical transparency
-- **FastAPI-based REST API** for enterprise deployment (Planned)
-- **Standalone web-based assessment tool** for immediate use
-- **Machine learning model** for medication diversion detection using Gradient Boosting
-- **Professional verification system** for enhanced security
+- **Layer A — Published/guideline signals (objective).** CDC 2022 guideline signals computed deterministically from FHIR/PDMP data: multiple prescribers/pharmacies, opioid×benzodiazepine date overlap (FDA boxed warning; CDC Rec 11), early-refill date arithmetic, MME tiers + escalation (CDC factors; a *support signal, not a cutoff*), clinician-entered ORT and COMM totals (validation limits stated on the output), documented prior incidents. Cancer/palliative/sickle-cell contexts suppress dose scoring, per CDC's own scope.
+- **Layer B — AI chart review.** Verified-quote narrative observations only (above).
+- **Layer C — Expert / lived-experience informed (Tier 4, UNVALIDATED).** Raphael's prior scoring items: quoted pressure tactics, story inconsistency, reluctance toward non-controlled alternatives / UDS / PDMP consent, travel-distance anomalies, cash-pay insistence *despite* coverage (cash alone is never scored), escalating urgency. **Capped at 15, disable-able, and can never alone produce the high zone.**
 
-### 📊 Risk Factors Considered
+## The MRD Escalator — scoring history–chart contradictions fairly
 
-#### Clinical Indicators
-- **Substance abuse history** - History of drug or alcohol abuse
-- **Mental health history** - Depression, anxiety, PTSD, or other mental health conditions
-- **Chronic pain history** - Long-term pain conditions requiring medication
-- **Pain out of proportion to physical exam** - Pain levels inconsistent with physical findings
+A patient's history contradicting objective chart data is a real signal — but patients have the right to make mistakes and to be poor historians. So contradictions are scored by **Materiality × Repetition × Directionality**, never as a flat item:
 
-#### Prescription Patterns
-- **Opioid prescriptions** - Number and frequency of opioid medications
-- **Benzodiazepine prescriptions** - Count and duration of benzodiazepine use
-- **High-dose prescriptions** - Medications exceeding recommended dosages
-- **Concurrent prescriptions** - Multiple high-risk medications simultaneously
-- **Early refill requests** - Requesting refills before scheduled time (Red Flag)
-- **Unusual requests** - Early refills, large quantities, specific formulations
-- **Prescription frequency** - Number of prescriptions per month
+- **Materiality:** trivial contradictions (dates, details) are informational forever — 0 points.
+- **Repetition:** a *single* material contradiction is an informational flag only — **0 points, and it can never by itself move a case up a zone**. Points require repetition across ≥2 separate encounters.
+- **Directionality:** mistakes that point both ways (random direction) earn a token amount (≤3 total) — that is what poor recall looks like. A pattern where the "mistakes" consistently favour obtaining more controlled substance earns progressively more (4 per qualifying repetition).
+- Contradiction points are **capped at 12** — below the objective opioid×benzo overlap item (15) — and sit inside the Layer C cap. They score only after **clinician confirmation**, every flag prints the **innocent explanations alongside** (poor recall, interpretation, timing, and the possibility that **the chart is wrong**), and a clinician can convert a flag into a **chart-correction request** (0 points) — the flag targets *the discrepancy, not the patient*.
 
-#### Healthcare Utilization
-- **Emergency department visits** - Frequent ED visits in pattern recognition
-- **Hospitalization history** - Hospital admissions and inpatient stays
-- **Primary care visits** - Regular healthcare engagement patterns
-- **Emergency requests** - Unscheduled or urgent care visits
-- **Lost/stolen reports** - Number of reported lost/stolen prescriptions
+## What this proves — and what it does NOT prove
 
-#### Provider and Pharmacy Patterns
-- **Number of prescribers** - Multiple healthcare providers prescribing controlled substances
-- **Number of pharmacies** - Using multiple pharmacies (pharmacy hopping)
-- **Geographic dispersion** - Distance between prescribers and pharmacies
-- **Travel distance to provider** - Long distances traveled for prescriptions
-- **Travel distance to pharmacy** - Extended travel for medication pickup
-- **Prescriber pressure tactics** - Aggressive demands or threats toward providers
-- **Prescription shopping patterns** - Visiting multiple providers for same medications
+**It proves** the engineering: FHIR data flows into auditable rules; an LLM's flags are filtered by quote verification; a scribe can surface checkable conversation content under a consent gate with human confirmation; a legacy scoring system can be transparently mapped, corrected, and layered without discarding its author's clinical knowledge. On the synthetic battery (31 cases): Layer A precision/recall 1.0/1.0, Layer B 1.0/1.0, Layer C 0.857/1.0 (the one FP is the MRD random-direction token, reported deliberately), **0 of 12 benign look-alikes reached an elevated zone** — see `EVALS.md`. Those are pipeline-correctness numbers on planted synthetic signals, labelled Tier 4.
 
-#### Insurance and Payment
-- **Insurance status** - Uninsured or cash-paying patients
-- **Payment method** - Cash payments as a red flag for avoiding tracking
-- **Doctor shopping admissions** - Patient self-reported shopping behavior
-- **Diversion admissions** - Patient acknowledgment of medication diversion
+**It does NOT prove** clinical accuracy. There is no real-patient validation; sensitivity/specificity are UNKNOWN; no pilot, customer, or deployment is claimed. `docs/VALIDATION_ROADMAP.md` is the required path before any clinical use.
 
-#### Behavioral Indicators
-- **Provider clinical intuition** - Gut feeling assessment by healthcare provider
-- **Inconsistent complaints** - Changing reasons for medication requests
-- **Time since last prescription** - Short intervals between similar prescriptions
-- **History of diversion** - Previous documented medication diversion incidents
+## Quickstart (v2)
 
-## System Architecture
-
-### Full Enterprise System (Under Development)
-- **Backend**: Python, FastAPI, scikit-learn, pandas
-- **Database**: SQLAlchemy ORM with PostgreSQL/MySQL support
-- **Machine Learning**: Gradient Boosting, XAI with SHAP/LIME
-- **API**: RESTful endpoints with authentication
-- **Integration**: EHR connectivity (EPIC, Cerner, Allscripts)
-- **PDMP Integration**: Prescription drug monitoring program connections
-
-### Standalone Web Tool (Prototype Ready)
-- **Frontend**: HTML, CSS, JavaScript (No server required)
-- **Security**: Professional verification with license validation
-- **Assessment**: Dual-level (Basic/Detailed) patient risk evaluation
-- **Offline Capability**: Functions without internet connection
-
-## Technologies & Stack
-
-### Enterprise System
-- **Backend**: Python 3.8+, FastAPI, Uvicorn
-- **Machine Learning**: scikit-learn, XGBoost, SHAP, LIME
-- **Data Processing**: pandas, NumPy
-- **Database**: SQLAlchemy, PostgreSQL
-- **Authentication**: OAuth2, JWT tokens
-- **Containerization**: Docker, Docker Compose
-
-### Standalone Prototype
-- **Frontend**: Vanilla JavaScript, HTML5, CSS3
-- **No External Dependencies**: Pure browser-based operation
-
-## Installation (Enterprise System - Planned)
-
-For the full enterprise system (currently under development):
-
-1. Clone the repository:
 ```bash
-git clone <repository-url>
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements-v2.txt
+uvicorn app_v2:app --port 8000     # demo keys: viewer/demo-viewer, scorer/demo-scorer, admin/demo-admin
+python -m pytest tests_v2/ -q      # 67 tests
+python scripts/run_eval.py         # synthetic eval battery -> evals/eval_results.json
 ```
 
-2. Create a virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
+Configuration: `AI_BACKEND=stub|local|upstream`, `AI_BASE_URL`, `AI_API_KEY`, `AI_STT_BASE_URL`, `MDR_API_KEYS`, `MDR_DB`. Default is the offline stub — PHI-safe pattern is a **local** model; sending charts to a hosted API requires a BAA (see `SECURITY.md`).
 
-3. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+Endpoints: gateway `/v1/chat/completions`, `/v1/models`, `/v1/embeddings`, `/v1/audio/transcriptions` · scoring `POST /score`, `POST /fhir/score`, `POST /fhir/bundle/score`, `POST /v2/score/original-format` (accepts the original repo's patient format and returns the v1 framework result as provenance) · scribe `POST /scribe/transcript`, `POST /scribe/audio`, `GET /queue`, `POST /queue/{id}/confirm` · `GET /audit` (admin), `GET /healthz`, demo UI at `/`.
 
-## Usage
+## Original v1 (preserved)
 
-### Full Enterprise System (Planned)
-```bash
-python run_system.py api
-```
-Or directly:
-```bash
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
-```
+The original system remains intact and importable: Gradient Boosting model (`models/diversion_detection.py`), 24-feature processor (`data/processor.py`), DEA/CDC/SAMHSA evaluation framework (`services/evaluation_framework.py`), SHAP/LIME explainability (`services/xai_service.py`), risk calculator with the original blend (`services/risk_calculator.py`), the v1 FastAPI app (`main.py`, `/api/v1/*`), `train_demo.py`, and the standalone `ui_demo.html` tool. v2's one legacy code change is a documented bug fix (processor crashed on ISO string dates). **Intellectual property:** this Clinical Risk Modeling Engine is the intellectual property of Raphael Tomas Malikian; attribution required, commercial use by permission (contact the author). The original prototype disclaimer and creator notes are preserved in git history and `CHANGELOG.md`.
 
-### Standalone Prototype (Ready Now)
-1. Download `ui_demo.html` from the repository
-2. Open in any modern web browser
-3. Complete professional verification with medical license
-4. Begin patient risk assessments
+## Creator
 
-### Running a Demo
-```bash
-python run_system.py demo
-```
-
-## Project Status
-
-### ✅ Standalone Web Tool - Ready for Use
-- [x] Complete risk factor integration
-- [x] Professional verification system
-- [x] Evidence-based risk scoring
-- [x] XAI feature importance visualization
-- [x] Dual assessment levels (Basic/Detailed)
-- [x] Comprehensive risk factor coverage
-- [x] Mandatory disclaimer popup
-- [x] Research citations and accountability
-
-### 🔄 Full Enterprise System - Under Development
-- [ ] Backend API integration
-- [ ] EHR connectivity (EPIC, Cerner, Allscripts)
-- [ ] PDMP (Prescription Drug Monitoring Program) integration
-- [ ] Database connectivity and management
-- [ ] Production-level security implementation
-- [ ] Clinical validation and testing
-- [ ] Regulatory compliance preparation
-
-## Project Structure
-```
-diversion/
-├── api/                 # API endpoints (Enterprise system)
-├── data/               # Data processing modules
-├── models/             # ML models and training algorithms
-├── services/           # Business logic and service layers
-├── utils/              # Utility functions and helpers
-├── tests/              # Unit and integration tests
-├── ui_demo.html        # Standalone web assessment tool (Prototype Ready)
-├── requirements.txt    # Python dependencies
-├── requirements-dev.txt # Development dependencies
-├── LICENSE             # MIT License
-├── README.md           # Project documentation
-├── CHANGELOG.md        # Version history
-├── CONTRIBUTING.md     # Contribution guidelines
-├── EHR_INTEGRATION.md  # EHR integration planning
-├── PUBLIC_DATA_SOURCES.md # Testing data resources
-└── main.py             # Main application entry point
-```
-
-## API Documentation (Enterprise System - Planned)
-After deploying the full system, API documentation will be available at `http://localhost:8000/docs`
-
-## Standalone Tool Features
-
-### Professional Verification System
-- Medical license number verification
-- Provider name and specialty validation
-- Prevents unauthorized access by non-medical professionals
-
-### Dual Assessment Levels
-- **Basic Assessment**: Quick screening with core risk factors
-- **Detailed Assessment**: Comprehensive evaluation with all risk indicators
-
-### Risk Scoring Algorithm
-- Evidence-based risk calculation
-- Weighted risk factors based on research
-- Feature importance visualization
-- Red flag identification and reporting
-
-### Security Measures
-- Mandatory professional verification
-- Protection against cherry-picking of potential patients
-- Clinical decision support for legitimate healthcare providers only
-
-## Testing
-Run the test suite:
-```bash
-python -m pytest tests/
-```
-
-## Data Sources for Testing and Validation
-For testing and validation, this project can utilize various publicly available healthcare datasets. See [PUBLIC_DATA_SOURCES.md](PUBLIC_DATA_SOURCES.md) for a comprehensive list of resources including:
-- Government health datasets (HCUP, CDC, SAMHSA)
-- Synthetic patient data generators (Synthea)
-- Clinical research datasets (MIMIC, PhysioNet)
-- Substance abuse and opioid-related statistics
-
-## Research Citations and Accountability
-This tool incorporates evidence-based risk factors from peer-reviewed research including:
-- CDC Guidelines for Prescribing Opioids for Chronic Pain
-- DEA guidelines on controlled substance diversion
-- SAMHSA substance use indicators
-- Studies on prescription drug monitoring programs
-- Research on "doctor shopping" behavior
-- Pain management and addiction studies
-
-All risk factors are weighted based on clinical evidence and research findings.
-
-## Screenshots
-
-Here are some screenshots of the Clinical Risk Modeling Engine:
-
-### Professional Verification Screen
-![Professional Verification](images/verification-screen.png)
-
-### Basic Assessment Form
-![Basic Assessment](images/basic-assessment.png)
-
-### Detailed Assessment Form
-![Detailed Assessment](images/detailed-assessment.png)
-
-### Risk Assessment Results
-![Risk Results](images/risk-results.png)
-
-## Creator Information
-
-**Raphael Tomas Malikian**
-Email: rtmalikian@gmail.com
-
-Raphael has experience working in the Family Medicine field as a provider and has lived experience of how damaging drug diversion is on providers, patients, pharmacies, and the greater community in the context of the opioid epidemic and other controlled substance diversion. This personal and professional experience has informed the development of this Clinical Risk Modeling Engine to help identify potential medication diversion risks.
-
-## Contributing
-We welcome contributions to enhance the Clinical Risk Modeling Engine. Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to participate.
-
-## Acknowledgments
-
-This project was created with the assistance of **Qwen Code in Visual Studio Code** using the coder model. The AI coding assistant helped with code generation, debugging, documentation, and project structure development.
-
-## License
-MIT License (see LICENSE file)
+**Raphael Tomas Malikian** — rtmalikian@gmail.com · Family Medicine background; founded and ran a direct primary care clinic as CEO; lived experience of how damaging drug diversion is to providers, patients, pharmacies, and the community, and of recovery. That experience informs this tool — and its insistence that a flag is a prompt for a conversation and support, never a verdict on a person.
 
 ## Keywords
-- medication diversion detection
-- opioid abuse prevention
-- prescription drug monitoring
-- clinical decision support
-- AI healthcare tool
-- drug diversion prevention
-- controlled substance monitoring
-- physician safety
-- patient safety
-- prescription safety
-- healthcare AI
-- machine learning healthcare
-- opioid crisis solution
-- drug abuse detection
-- medical informatics
-- clinical risk assessment
+
+medication diversion detection · drug diversion prevention · controlled substance risk scoring · opioid stewardship · PDMP · prescription drug monitoring · MME morphine milligram equivalents · FHIR R4 · EHR integration · ambient scribe · speech to text clinical · AI chart review · LLM red flags · opioid risk tool · COMM · CDC opioid guideline 2022 · clinician decision support · healthcare AI · clinical AI

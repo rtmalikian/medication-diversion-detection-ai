@@ -1,3 +1,18 @@
+# EHR Integration Guide — v2 status (2026-10-28)
+
+> **v2 implements the FHIR path described below.** `v2/fhir_client.py` is a working
+> FHIR R4 client: it searches Patient, MedicationRequest, MedicationDispense,
+> Encounter, Observation and Condition by patient, maps bundles to the v2 Chart
+> model (`bundle_to_chart`), and the deterministic Layer A rules score from that
+> data. It is tested against a local mock FHIR server (httpx MockTransport) and a
+> bundled Synthea-format synthetic bundle (`tests_v2/fixtures/synthea_bundle.json`).
+> API: `POST /fhir/score` (base URL + patient id), `POST /fhir/bundle/score`.
+> Known limits: drug classification uses a name lexicon (production must bind
+> RxNorm/ATC); SMART on FHIR OAuth is deployment configuration, not implemented
+> here; HL7 v2 and vendor-specific (Epic/Cerner) adapters below remain plans.
+
+---
+
 # EHR Integration Guide for Clinical Risk Modeling Engine
 
 This document outlines the approach for integrating the Clinical Risk Modeling Engine with major EHR systems like EPIC, Cerner, Allscripts, etc.

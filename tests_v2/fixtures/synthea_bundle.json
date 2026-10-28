@@ -1,0 +1,184 @@
+{
+ "resourceType": "Bundle",
+ "type": "collection",
+ "entry": [
+  {
+   "resource": {
+    "resourceType": "Patient",
+    "id": "syn-1",
+    "name": [
+     {
+      "family": "Synthetic",
+      "given": [
+       "Test"
+      ]
+     }
+    ],
+    "birthDate": "1980-05-01"
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "Condition",
+    "id": "c1",
+    "subject": {
+     "reference": "Patient/syn-1"
+    },
+    "code": {
+     "text": "Chronic pain"
+    }
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "MedicationRequest",
+    "id": "mr1",
+    "subject": {
+     "reference": "Patient/syn-1"
+    },
+    "requester": {
+     "display": "Dr A"
+    },
+    "authoredOn": "2026-08-01",
+    "medicationCodeableConcept": {
+     "text": "Oxycodone 10mg"
+    },
+    "dosageInstruction": [
+     {
+      "doseAndRate": [
+       {
+        "doseQuantity": {
+         "value": 10,
+         "unit": "mg"
+        }
+       }
+      ],
+      "timing": {
+       "repeat": {
+        "frequency": 2,
+        "period": 1,
+        "periodUnit": "d"
+       }
+      }
+     }
+    ]
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "MedicationRequest",
+    "id": "mr2",
+    "subject": {
+     "reference": "Patient/syn-1"
+    },
+    "requester": {
+     "display": "Dr A"
+    },
+    "authoredOn": "2026-08-01",
+    "medicationCodeableConcept": {
+     "text": "Lorazepam 1mg"
+    },
+    "dosageInstruction": [
+     {
+      "doseAndRate": [
+       {
+        "doseQuantity": {
+         "value": 1,
+         "unit": "mg"
+        }
+       }
+      ],
+      "timing": {
+       "repeat": {
+        "frequency": 1,
+        "period": 1,
+        "periodUnit": "d"
+       }
+      }
+     }
+    ]
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "MedicationDispense",
+    "id": "md1",
+    "subject": {
+     "reference": "Patient/syn-1"
+    },
+    "medicationCodeableConcept": {
+     "text": "Oxycodone 10mg"
+    },
+    "authorizingPrescription": [
+     {
+      "reference": "MedicationRequest/mr1"
+     }
+    ],
+    "performer": [
+     {
+      "actor": {
+       "display": "Pharmacy 1"
+      }
+     }
+    ],
+    "whenHandedOver": "2026-09-01T10:00:00Z",
+    "daysSupply": {
+     "value": 30
+    }
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "MedicationDispense",
+    "id": "md2",
+    "subject": {
+     "reference": "Patient/syn-1"
+    },
+    "medicationCodeableConcept": {
+     "text": "Oxycodone 10mg"
+    },
+    "authorizingPrescription": [
+     {
+      "reference": "MedicationRequest/mr1"
+     }
+    ],
+    "performer": [
+     {
+      "actor": {
+       "display": "Pharmacy 1"
+      }
+     }
+    ],
+    "whenHandedOver": "2026-09-20T10:00:00Z",
+    "daysSupply": {
+     "value": 30
+    }
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "Encounter",
+    "id": "e1",
+    "subject": {
+     "reference": "Patient/syn-1"
+    },
+    "period": {
+     "start": "2026-09-01"
+    }
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "Observation",
+    "id": "o1",
+    "subject": {
+     "reference": "Patient/syn-1"
+    },
+    "code": {
+     "text": "Current Opioid Misuse Measure (COMM)"
+    },
+    "valueInteger": 12
+   }
+  }
+ ]
+}

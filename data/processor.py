@@ -10,11 +10,29 @@ from config import settings
 # Configure logging
 logger = logging.getLogger(__name__)
 
+def _coerce_date(value):
+    """Coerce a prescription date (datetime, date, or ISO string) to datetime.
+
+    v2 fix: patient records commonly carry ISO string dates (the format this
+    project's own tests use); the original code called .year/.month on them
+    and crashed. Unparseable values fall back to now, matching the original
+    default for a missing date.
+    """
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, str):
+        try:
+            return datetime.fromisoformat(value.replace("Z", "+00:00")).replace(tzinfo=None)
+        except ValueError:
+            return datetime.now()
+    return datetime.now()
+
+
 class DataProcessor:
     """
     Class to handle data processing for medication diversion detection
     """
-    
+
     def __init__(self):
         self.feature_columns = [
             'age', 'gender_encoded', 'num_medications', 'high_risk_medications',
@@ -62,8 +80,8 @@ class DataProcessor:
             # Calculate prescription frequency (prescriptions per month)
             if prescriptions:
                 # Assuming prescriptions have date information
-                start_date = min(p.get('date', datetime.now()) for p in prescriptions)
-                end_date = max(p.get('date', datetime.now()) for p in prescriptions)
+                start_date = min(_coerce_date(p.get('date')) for p in prescriptions)
+                end_date = max(_coerce_date(p.get('date')) for p in prescriptions)
                 months = (end_date.year - start_date.year) * 12 + (end_date.month - start_date.month)
                 features['prescription_frequency'] = len(prescriptions) / max(months, 1)
             else:

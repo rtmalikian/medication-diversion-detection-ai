@@ -1,0 +1,81 @@
+{
+  "comment": "Every weight is traceable in SCORING.md. Layer A items cite published sources; thresholds marked app_defined are operational choices, NOT literature-validated cutoffs. Layer C items are expert-opinion / lived-experience informed, Tier 4, UNVALIDATED.",
+  "layer_a": {
+    "comm_elevated": {
+      "basis": "Butler et al. 2007 COMM original cut score >=9; self-report instrument",
+      "points": 8,
+      "threshold": 9
+    },
+    "documented_prior_diversion": {
+      "basis": "Original repo SAMHSA HISTORY_OF_DIVERSION (CRITICAL) + ML label weight 3; kept as a clinician-entered DOCUMENTED record item, reframed in pattern language",
+      "points": 12
+    },
+    "early_refill": {
+      "basis": "PDMP dispensing-pattern signal reviewed under CDC 2022 Rec 9; threshold app_defined",
+      "early_by_days": 5,
+      "points": 10
+    },
+    "mme_escalation": {
+      "basis": "Dose trajectory reviewed under CDC 2022 Recs 5/7 follow-up; threshold app_defined",
+      "min_increase_fraction": 0.5,
+      "points": 8
+    },
+    "mme_ge_50": {
+      "basis": "CDC 2022 Rec 8 lists >=50 MME/day among factors for offering naloxone; signal only, NOT a cutoff (CDC cautions against hard MME thresholds)",
+      "points": 7
+    },
+    "mme_ge_90": {
+      "basis": "Higher-dose risk discussion in CDC 2022; zoning app_defined; NOT a cutoff",
+      "points": 12
+    },
+    "multiple_pharmacies": {
+      "basis": "CDC 2022 Rec 9 (PDMP review); threshold app_defined",
+      "points": 8,
+      "threshold_pharmacies": 3
+    },
+    "multiple_prescribers": {
+      "basis": "CDC 2022 Rec 9 (PDMP review); threshold app_defined",
+      "points": 10,
+      "threshold_prescribers": 3
+    },
+    "opioid_benzo_overlap": {
+      "basis": "FDA boxed warning 2016; CDC 2022 Rec 11",
+      "min_overlap_days": 1,
+      "points": 15
+    },
+    "ort_high": {
+      "basis": "Webster & Webster 2005 ORT high band >=8; external validation inconsistent \u2014 see SCORING.md",
+      "points": 10,
+      "threshold": 8
+    }
+  },
+  "layer_b": {
+    "basis": "AI chart review \u2014 a flag scores ONLY with a verbatim quote verified against the chart text. Method: verified generation. No published validation for this layer as implemented.",
+    "cap": 24,
+    "points_per_verified_flag": 6
+  },
+  "layer_c": {
+    "basis": "Expert-opinion / lived-experience informed \u2014 Tier 4, UNVALIDATED. Capped: Layer C alone can never produce the high zone (enforced in code).",
+    "cap": 15,
+    "enabled": true,
+    "points": {
+      "cash_pay_insistence_with_insurance": 3,
+      "conversation_admission_sharing_selling": 5,
+      "conversation_contradicts_plan": 4,
+      "conversation_inconsistent_with_chart": 5,
+      "conversation_third_party_pressure": 4,
+      "conversation_threat_or_coercion": 5,
+      "declines_noncontrolled_alternatives": 3,
+      "declines_uds_or_pdmp_consent": 4,
+      "pressure_tactics_quoted": 5,
+      "story_inconsistency_across_visits": 5,
+      "travel_distance_anomaly": 3,
+      "urgency_escalation_between_visits": 4
+    }
+  },
+  "version": "scoring-v2-2026-10-28.1",
+  "zones": {
+    "elevated_min": 15,
+    "high_min": 40
+  }
+}
