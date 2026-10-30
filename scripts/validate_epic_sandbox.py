@@ -61,7 +61,56 @@ DEFAULT_CLIENT_ID = "f5dc34d0-2432-4297-9be8-69c9321dbc04"
 os.environ.setdefault("EPIC_CLIENT_ID", DEFAULT_CLIENT_ID)
 
 
-async def run(patient_id: str, report_path: str) -> int:
+async def get_token_with_retry(auth: SmartBackendAuth, retries: int) -> str:
+    """Token exchange with backoff.
+
+    A freshly-saved sandbox app can take a while to provision on Epic's
+    side (the token endpoint answers invalid_client until the app's key
+    association propagates), so retry before concluding it is broken.
+    Every attempt is timestamped and printed; the final error surfaces.
+    """
+    delay = 15.0
+    last: Exception | None = None
+    for attempt in range(1, retries + 1):
+        stamp = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
+        try:
+            token = await auth.get_token(force_refresh=True)
+            print(f"[{stamp}] token exchange attempt {attempt}: OK")
+            return token
+        except SmartAuthError as exc:
+            last = exc
+            print(f"[{stamp}] token exchange attempt {attempt}: {exc}")
+            if attempt < retries:
+                print(f"  retrying in {delay:.0f}s...")
+                await asyncio.sleep(delay)
+                delay = min(delay * 2, 120.0)
+    raise last  # type: ignore[misc]
+
+
+async def discover_patient(auth: SmartBackendAuth, fhir_base: str) -> str | None:
+    """Find a sandbox test patient id via Patient search (never hardcoded).
+
+    Epic sandbox test patients are discoverable once a token works; the
+    classic sandbox family name is Argonaut. Returns the first patient
+    id found, or None.
+    """
+    import httpx
+    token = await auth.get_token()
+    headers = {"Authorization": f"Bearer {token}",
+               "Accept": "application/fhir+json"}
+    async with httpx.AsyncClient(timeout=30) as client:
+        for params in ({"name": "Argonaut"}, {"family": "Argonaut"},
+                       {"name": "a", "_count": "5"}):
+            resp = await client.get(f"{fhir_base}/Patient", headers=headers,
+                                    params=params)
+            if resp.status_code == 200:
+                entries = resp.json().get("entry", [])
+                if entries:
+                    return entries[0]["resource"]["id"]
+    return None
+
+
+async def run(patient_id: str, report_path: str, retries: int = 4) -> int:
     auth = SmartBackendAuth()
     if not auth.configured:
         print("ERROR: EPIC_CLIENT_ID and EPIC_PRIVATE_KEY_PATH must be set "
@@ -69,11 +118,19 @@ async def run(patient_id: str, report_path: str) -> int:
         return 2
     fhir_base = os.environ.get("EPIC_FHIR_BASE_URL", EPIC_SANDBOX_FHIR_BASE)
     try:
-        token = await auth.get_token()
+        await get_token_with_retry(auth, retries)
     except SmartAuthError as exc:
-        print(f"ERROR: token exchange failed: {exc}", file=sys.stderr)
+        print(f"ERROR: token exchange failed after {retries} attempt(s): {exc}",
+              file=sys.stderr)
         return 1
     print(f"Token exchange OK (token itself is never printed or stored).")
+    if not patient_id:
+        patient_id = await discover_patient(auth, fhir_base) or ""
+        if not patient_id:
+            print("ERROR: no sandbox patient discoverable via Patient search.",
+                  file=sys.stderr)
+            return 1
+        print(f"Discovered sandbox patient id: {patient_id}")
 
     client = FhirClient(fhir_base, auth=auth)
     try:
@@ -134,17 +191,17 @@ def json_summary(result: dict) -> str:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--patient", default=os.environ.get("EPIC_PATIENT_ID", ""),
-                    help="Sandbox patient FHIR id (or set EPIC_PATIENT_ID)")
+                    help="Sandbox patient FHIR id (or EPIC_PATIENT_ID); "
+                         "omit to auto-discover via Patient search")
     ap.add_argument("--report", default=None,
                     help="Report path (default docs/epic-sandbox-validation-<date>.md)")
+    ap.add_argument("--retries", type=int, default=4,
+                    help="Token-exchange attempts with backoff (default 4)")
     args = ap.parse_args()
-    if not args.patient:
-        print("ERROR: --patient or EPIC_PATIENT_ID is required.", file=sys.stderr)
-        return 2
     report = args.report or os.path.join(
         os.path.dirname(__file__), "..", "docs",
         f"epic-sandbox-validation-{dt.date.today().isoformat()}.md")
-    return asyncio.run(run(args.patient, report))
+    return asyncio.run(run(args.patient, report, retries=args.retries))
 
 
 if __name__ == "__main__":

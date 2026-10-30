@@ -1,16 +1,32 @@
 # Epic FHIR Sandbox — SMART Backend Services validation
 
-**Status (2026-10-30): implemented and mock-tested; app registered;
-live token exchange attempted — Epic returned `invalid_client`, run not
-yet successful.** Registration is DONE (details below, incl. the sandbox
+**Status (2026-10-30): implemented and mock-tested; app registered
+(JWK Set URL shows "Validated" in Epic's own check, app saved);
+live token exchange attempted repeatedly — Epic returns
+`invalid_client`, run not yet successful. UNRESOLVED.** Registration is DONE (details below, incl. the sandbox
 client id and the hosted JWK Set URL). A live exchange was attempted the
 same day with a correctly-formed RS384 assertion (structure and
 signature verified locally against the public key; the hosted JWKS was
 fetched and matches) and Epic's token endpoint answered
 `HTTP 400 {"error": "invalid_client", "error_description": null}` —
-the expected cause is app-side: the JWK Set URL association had only
-just been entered in the app and Epic-side pickup/activation was still
-pending. **No live Epic validation is claimed until
+Attempt log (all with correctly-formed RS384 assertions; scope
+`system/Patient.read`, and the parent run also tried the full
+six-resource scope set): 2026-10-30 ~19:2x UTC (2 attempts, assertion
+lifetimes 300 s and 240 s), ~19:29 UTC (parent, 2 attempts, after the
+JWK Set URL showed "Validated" and the app was saved), and
+19:35:15 / 19:35:31 / 19:36:01 / 19:37:02 UTC (the validation script's
+4 backoff retries) — every attempt answered
+`HTTP 400 {"error": "invalid_client", "error_description": null}`.
+Ruled out locally: assertion structure (iss=sub=client_id, aud=token
+URL, exp ≤ 5 min, jti, kid header), RS384 signature (verifies against
+the public key), hosted JWKS (fetched live; kid/n/e match the signing
+key), client id, token URL. Remaining hypotheses, in order: (1)
+sandbox provisioning / key-propagation delay after the app save;
+(2) Epic-side fetching/caching of the hosted JWKS; (3) the sandbox
+client's scope/API approvals not yet active. No cause is asserted —
+retry the live run later; if it still fails, the next step is inside
+the Epic app (re-check the JWK Set URL + client activation state) or
+an Epic support/forum query with these timestamps. **No live Epic validation is claimed until
 `scripts/validate_epic_sandbox.py` has run successfully and its dated
 report exists under `docs/`.** Retry the live-run commands below once
 the app shows the JWK Set URL saved.
