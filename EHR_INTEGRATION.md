@@ -52,8 +52,13 @@ Source: https://fhir.epic.com/documentation?docid=mcp
 > bundled Synthea-format synthetic bundle (`tests_v2/fixtures/synthea_bundle.json`).
 > API: `POST /fhir/score` (base URL + patient id), `POST /fhir/bundle/score`.
 > Known limits: drug classification uses a name lexicon (production must bind
-> RxNorm/ATC); SMART on FHIR OAuth is deployment configuration, not implemented
-> here; HL7 v2 and vendor-specific (Epic/Cerner) adapters below remain plans.
+> RxNorm/ATC); HL7 v2 and vendor-specific (Epic/Cerner) adapters below remain
+> plans. **Update 2026-10-30:** SMART **Backend Services** auth (RS384 JWT
+> client assertion, token caching) is now implemented in
+> `v2/smart_backend.py` and wired into the FHIR client for Epic sandbox
+> validation — mock-tested; the live sandbox run is pending app
+> registration. See `EPIC_SANDBOX.md`. (SMART *user-facing launch* flows
+> remain deployment configuration.)
 
 ---
 

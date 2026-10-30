@@ -53,6 +53,10 @@ A patient's history contradicting objective chart data is a real signal — but 
 
 v2 also integrates Epic's **open.epic MCP server** (`https://mcp.open.epic.com`) — a **documentation/spec-lookup** integration (`v2/epic_mcp.py`; `GET /epic-mcp/tools`, `POST /epic-mcp/docs`) used to retrieve Epic's API specifications for the MedicationRequest / MedicationDispense / Observation APIs the FHIR client consumes. It returns documentation only — **no patient data ever flows through it** (Epic states it is not designated to handle PHI, and an in-code no-PHI guard refuses patient-like queries); patient data stays on the FHIR R4 + SMART path. Full details: the "open.epic MCP" section of [`EHR_INTEGRATION.md`](EHR_INTEGRATION.md); AI-client config example: `epic-mcp.mcp.json.example`.
 
+## Epic sandbox validation (SMART Backend Services)
+
+SMART **Backend Services** auth for Epic's FHIR sandbox is implemented in `v2/smart_backend.py` (RS384 JWT client assertion, token caching) and wired into the FHIR client; `scripts/validate_epic_sandbox.py` runs token exchange → chart fetch → scoring on a sandbox synthetic patient. Mock-tested; **live run pending app registration** — see [`EPIC_SANDBOX.md`](EPIC_SANDBOX.md).
+
 ## Quickstart (v2)
 
 ```bash

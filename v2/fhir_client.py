@@ -122,10 +122,15 @@ def bundle_to_chart(bundle: dict, patient_ref: str = "synthetic") -> Chart:
 
 class FhirClient:
     def __init__(self, base_url: str, transport: httpx.AsyncBaseTransport | None = None,
-                 headers: dict | None = None):
+                 headers: dict | None = None, auth=None):
+        """auth: optional SMART Backend Services token provider
+        (v2.smart_backend.SmartBackendAuth). When given, fetch_chart()
+        adds its bearer token to the request headers — this is how the
+        client talks to Epic's sandbox (see EPIC_SANDBOX.md)."""
         self.base_url = base_url.rstrip("/")
         self.transport = transport
         self.headers = headers or {"Accept": "application/fhir+json"}
+        self.auth = auth
 
     async def _search(self, client: httpx.AsyncClient, resource: str, patient_id: str) -> list[dict]:
         r = await client.get(f"{self.base_url}/{resource}",
@@ -135,7 +140,10 @@ class FhirClient:
         return [e.get("resource", {}) for e in data.get("entry", [])]
 
     async def fetch_chart(self, patient_id: str) -> Chart:
-        async with httpx.AsyncClient(transport=self.transport, headers=self.headers,
+        headers = dict(self.headers)
+        if self.auth is not None:
+            headers.update(await self.auth.auth_headers())
+        async with httpx.AsyncClient(transport=self.transport, headers=headers,
                                      timeout=30) as client:
             bundle = {"resourceType": "Bundle", "entry": []}
             for resource in ("Patient", "MedicationRequest", "MedicationDispense",
