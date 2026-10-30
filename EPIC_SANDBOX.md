@@ -1,13 +1,19 @@
 # Epic FHIR Sandbox — SMART Backend Services validation
 
-**Status (2026-10-30): implemented and mock-tested; live run pending app
-registration.** The SMART Backend Services auth module and the FHIR
-client wiring are complete and covered by mock-only tests. The live
-validation run against Epic's sandbox requires a registered sandbox app
-(client id) — that registration is a one-time step in Raphael's Epic
-developer account and has not happened yet. **No live Epic validation is
-claimed until `scripts/validate_epic_sandbox.py` has run successfully
-and its dated report exists under `docs/`.**
+**Status (2026-10-30): implemented and mock-tested; app registered;
+live token exchange attempted — Epic returned `invalid_client`, run not
+yet successful.** Registration is DONE (details below, incl. the sandbox
+client id and the hosted JWK Set URL). A live exchange was attempted the
+same day with a correctly-formed RS384 assertion (structure and
+signature verified locally against the public key; the hosted JWKS was
+fetched and matches) and Epic's token endpoint answered
+`HTTP 400 {"error": "invalid_client", "error_description": null}` —
+the expected cause is app-side: the JWK Set URL association had only
+just been entered in the app and Epic-side pickup/activation was still
+pending. **No live Epic validation is claimed until
+`scripts/validate_epic_sandbox.py` has run successfully and its dated
+report exists under `docs/`.** Retry the live-run commands below once
+the app shows the JWK Set URL saved.
 
 ## What is implemented
 
@@ -42,22 +48,27 @@ These are exactly the resource types `v2/fhir_client.py` consumes. The
 scope set that actually works is **whatever the registered sandbox app
 is approved for** — requesting an unapproved scope fails the exchange.
 
-## Registration steps (one-time, in the developer's Epic account)
+## Registration (DONE 2026-10-30)
 
-1. Sign in at https://fhir.epic.com → Developer Apps → create a new app.
-2. App type/audience: **Backend Systems** (system-level access, no user
-   interaction), FHIR version **R4**, environment **Sandbox**
-   (non-production, synthetic patients).
-3. Request the scopes above.
-4. Upload the app's public key as a **JWK** (Epic generates the keypair
-   association from it; the matching private key stays with us and is
-   never committed to this repo — `.gitignore` blocks `*.pem`/`*.key`).
-   Current sandbox keypair (generated 2026-10-30, stored outside git):
-   - Public key JWK `kid`: `TgqxMccYLexwu37wIK5qoCr9vL1-Dz8aRHZRtFNs2n8`
-     (RFC 7638 thumbprint), RSA-2048, `alg: RS384`, `use: sig`.
-5. Note the assigned **client id** — that is the only value the code
-   needs from the registration, supplied via the `EPIC_CLIENT_ID`
-   environment variable.
+Registered at https://fhir.epic.com in Raphael's Epic developer account:
+
+- **App name:** Medication Diversion Detection AI — **App ID:** 64194
+- **App type:** Backend Systems, **FHIR R4**, **SMART v1**
+- **Non-Production (sandbox) Client ID:**
+  `f5dc34d0-2432-4297-9be8-69c9321dbc04` (a public identifier, not a
+  secret; it is the validation script's default, overridable via
+  `EPIC_CLIENT_ID`)
+- **APIs selected (all Read + Search):** Patient, MedicationRequest,
+  MedicationDispense, Encounter, Observation, Condition
+- **Public key:** Epic does NOT accept pasted/uploaded keys for this —
+  it requires a **hosted JWK Set URL**. The JWKS for our sandbox keypair
+  (RSA-2048, `alg: RS384`, `use: sig`, `kid`
+  `TgqxMccYLexwu37wIK5qoCr9vL1-Dz8aRHZRtFNs2n8` = RFC 7638 thumbprint)
+  is hosted at **https://rtmalikian.github.io/epic/jwks.json**
+  (verified live: HTTP 200, application/json). The private key lives
+  only outside git (`.gitignore` blocks `*.pem`/`*.key`).
+- A **Production** client id exists on the app but was **NOT
+  activated** — do not use it or request production access.
 
 ## Live run (once a client id exists)
 

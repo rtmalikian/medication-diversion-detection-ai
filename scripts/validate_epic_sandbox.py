@@ -19,8 +19,13 @@ Performs the full Phase 2 path with a registered Backend Systems app:
 Prerequisites (see EPIC_SANDBOX.md for the registration walkthrough):
 - A Backend Systems app registered at https://fhir.epic.com with the
   public key (JWK) uploaded and the system/*.read scopes approved.
+  Registered 2026-10-30: app "Medication Diversion Detection AI"
+  (app ID 64194), Non-Production (sandbox) Client ID
+  f5dc34d0-2432-4297-9be8-69c9321dbc04 — a public identifier, used as
+  the default below and still overridable via EPIC_CLIENT_ID.
 - Environment:
-    EPIC_CLIENT_ID          the app's client id
+    EPIC_CLIENT_ID          the app's client id (default: the sandbox
+                            client id above)
     EPIC_PRIVATE_KEY_PATH   path to the private key PEM (never in git)
     EPIC_PRIVATE_KEY_KID    kid of the uploaded JWK (optional if the
                             token endpoint resolves a single key)
@@ -50,6 +55,10 @@ from v2.smart_backend import (  # noqa: E402
     SmartAuthError,
     SmartBackendAuth,
 )
+
+# Registered sandbox app (public identifier — client IDs are not secrets).
+DEFAULT_CLIENT_ID = "f5dc34d0-2432-4297-9be8-69c9321dbc04"
+os.environ.setdefault("EPIC_CLIENT_ID", DEFAULT_CLIENT_ID)
 
 
 async def run(patient_id: str, report_path: str) -> int:
