@@ -17,6 +17,7 @@ from pydantic import BaseModel
 
 from v2 import __version__, gateway, store
 from v2.chart_review import review_chart
+from v2.epic_mcp import EpicMcpClient, PhiGuardError
 from v2.fhir_client import FhirClient, bundle_to_chart
 from v2.models import chart_from_dict
 from v2.scoring import load_config, score_chart
@@ -98,6 +99,41 @@ async def transcriptions(file: UploadFile = File(...), model: str | None = Form(
     store.audit(user["actor"], user["role"], "gateway_transcribe", file.filename or "",
                 f"bytes={len(audio)} audio_retained=False")
     return await gateway.transcribe(audio, file.filename or "audio.wav", model)
+
+
+# ----------------------------- open.epic MCP (documentation only) -------------
+# Epic's open.epic MCP server returns DOCUMENTATION (API specs, playbooks,
+# FAQs) — never patient data. Patient data flows only through the FHIR R4
+# client above. See EHR_INTEGRATION.md "open.epic MCP" and v2/epic_mcp.py.
+
+def epic_mcp_client() -> EpicMcpClient:
+    return EpicMcpClient()
+
+
+class EpicDocsRequest(BaseModel):
+    query: str
+
+
+@app.get("/epic-mcp/tools")
+async def epic_mcp_tools(user=Depends(require_role("viewer"))):
+    """List the open.epic MCP documentation tools (degrades gracefully)."""
+    return await epic_mcp_client().list_tools()
+
+
+@app.post("/epic-mcp/docs")
+async def epic_mcp_docs(req: EpicDocsRequest, user=Depends(require_role("viewer"))):
+    """Search Epic's API documentation via the open.epic MCP server.
+
+    Use case here: retrieve the Epic API specifications for the
+    MedicationRequest / MedicationDispense / Observation APIs that
+    v2/fhir_client.py consumes, while building or debugging the EHR
+    integration. The no-PHI guard in v2/epic_mcp.py refuses any query
+    that looks like patient data — documentation-style queries only.
+    """
+    try:
+        return await epic_mcp_client().search_docs(req.query)
+    except PhiGuardError as e:
+        raise HTTPException(400, str(e))
 
 
 # ----------------------------- scoring -----------------------------

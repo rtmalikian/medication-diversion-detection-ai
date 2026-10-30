@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added (2026-10-30)
+- **open.epic MCP documentation integration** (`v2/epic_mcp.py`; `GET /epic-mcp/tools`, `POST /epic-mcp/docs` in `app_v2.py`): a dependency-light JSON-RPC/Streamable-HTTP client for Epic's remote MCP server at https://mcp.open.epic.com, used to look up Epic API specifications (MedicationRequest / MedicationDispense / Observation) for the FHIR integration. Documentation/spec lookup ONLY — no patient data flows through it; an in-code no-PHI guard refuses patient-like queries, and the feature degrades gracefully when disabled/unreachable. Live-verified 2026-10-30 (server "open.epic MCP" v4.0.9; tools `search_documents`, `get_document`). Plus `epic-mcp.mcp.json.example` AI-client config and an "open.epic MCP" section in `EHR_INTEGRATION.md`. Mock-only tests in `tests_v2/test_epic_mcp.py`.
 
 ## [2.0.0] - 2026-10-28 — v2 upgrade (additive; v1 preserved)
 ### Added

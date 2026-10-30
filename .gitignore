@@ -92,3 +92,9 @@ data/
 data-v2/
 tests_v2/test_mdr.sqlite3
 evals/eval_results.json.tmp
+
+# Epic sandbox credentials — NEVER commit private keys or client secrets
+*.pem
+*.key
+epic-sandbox-keys/
+.epic-sandbox.env

@@ -1,4 +1,48 @@
-# EHR Integration Guide — v2 status (2026-10-28)
+# EHR Integration Guide — v2 status (2026-10-28, open.epic MCP added 2026-10-30)
+
+## open.epic MCP — Epic documentation lookup (NOT patient data)
+
+Epic publishes a remote Model Context Protocol (MCP) server at
+**https://mcp.open.epic.com** (Streamable HTTP transport). v2 integrates it
+in `v2/epic_mcp.py`, exposed as `GET /epic-mcp/tools` and
+`POST /epic-mcp/docs`, to retrieve Epic's own API specifications and
+integration guidance while building and running the FHIR integration below
+— for example the Epic API specs for the MedicationRequest,
+MedicationDispense and Observation APIs that `v2/fhir_client.py` consumes.
+
+**What it is / is not.** The server returns *documentation content only*:
+API specifications, interface summaries, additional documentation
+(data-sharing playbooks, tutorials) and FAQs, including Epic on FHIR
+content. Its tools (discovered at runtime via `tools/list`; live-verified
+2026-10-30 against server "open.epic MCP" v4.0.9) are `search_documents`
+and `get_document`. It is **not** a patient-data or FHIR-resource server:
+no Patient/Observation/Encounter querying, no SMART/OAuth, no
+credentials. **Patient data flows only through the FHIR R4 client +
+SMART on FHIR in this repo — never through this MCP server.**
+
+**No-PHI rule (enforced in code).** Epic states the server is *not
+designated to handle protected health information (PHI) or other
+confidential information* and that the user is responsible for anything
+transmitted to it. `v2/epic_mcp.py` therefore screens every query before
+sending: anything that looks like PHI / patient data (FHIR resource JSON,
+`Patient/<id>` references, MRN/SSN-like patterns, date-of-birth phrasing)
+is refused and the refusal logged. Only documentation-style queries (API
+names, resource *type* names, spec topics) are allowed. Use is subject to
+the open.epic Terms of Use.
+
+**Config.** `EPIC_MCP_URL` (default `https://mcp.open.epic.com`),
+`EPIC_MCP_ENABLED` (default on; set `0` to disable). The integration
+degrades gracefully — if the server is unreachable or disabled, the rest
+of the app (scoring, FHIR client, scribe) works unchanged.
+
+**AI-client setup.** `epic-mcp.mcp.json.example` at the repo root is an
+example MCP client config to copy into the file your client reads —
+Claude Code reads `.mcp.json`, VS Code reads `.vscode/mcp.json`, and
+Cursor reads its MCP config — it is an example, not a forced config.
+
+Source: https://fhir.epic.com/documentation?docid=mcp
+
+
 
 > **v2 implements the FHIR path described below.** `v2/fhir_client.py` is a working
 > FHIR R4 client: it searches Patient, MedicationRequest, MedicationDispense,

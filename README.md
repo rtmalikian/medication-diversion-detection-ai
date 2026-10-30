@@ -49,6 +49,10 @@ A patient's history contradicting objective chart data is a real signal — but 
 
 **It does NOT prove** clinical accuracy. There is no real-patient validation; sensitivity/specificity are UNKNOWN; no pilot, customer, or deployment is claimed. `docs/VALIDATION_ROADMAP.md` is the required path before any clinical use.
 
+## Epic documentation via open.epic MCP
+
+v2 also integrates Epic's **open.epic MCP server** (`https://mcp.open.epic.com`) — a **documentation/spec-lookup** integration (`v2/epic_mcp.py`; `GET /epic-mcp/tools`, `POST /epic-mcp/docs`) used to retrieve Epic's API specifications for the MedicationRequest / MedicationDispense / Observation APIs the FHIR client consumes. It returns documentation only — **no patient data ever flows through it** (Epic states it is not designated to handle PHI, and an in-code no-PHI guard refuses patient-like queries); patient data stays on the FHIR R4 + SMART path. Full details: the "open.epic MCP" section of [`EHR_INTEGRATION.md`](EHR_INTEGRATION.md); AI-client config example: `epic-mcp.mcp.json.example`.
+
 ## Quickstart (v2)
 
 ```bash
